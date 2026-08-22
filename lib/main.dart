@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gabarito_plus/view/CadastroAluno.dart';
 
 void main() {
   runApp(const GabaritoPlus());
@@ -7,19 +8,89 @@ void main() {
 class GabaritoPlus extends StatelessWidget {
   const GabaritoPlus({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Gabarito Plus', // Título na Página
-
+      debugShowCheckedModeBanner: false,
+      title: 'Gabarito Plus',
       theme: ThemeData(
-        colorScheme: .fromSeed(
-          seedColor: const Color.fromARGB(255, 195, 28, 75),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        useMaterial3: true,
+      ),
+      home: const MenuComDrawer(),
+    );
+  }
+}
+
+class MenuComDrawer extends StatelessWidget {
+  const MenuComDrawer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Menu Lateral')),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const UserAccountsDrawerHeader(
+              accountName: Text('Nome Usuário'),
+              accountEmail: Text('Email Usuário'),
+              currentAccountPicture: CircleAvatar(
+                backgroundColor: Colors.white,
+                child: Text('UN', style: TextStyle(fontSize: 24.0)),
+              ),
+              decoration: BoxDecoration(color: Colors.blue),
+            ),
+            ListTile(
+              leading: const Icon(Icons.home),
+              title: const Text('Início'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.create),
+              title: const Text('Cadastro de Aluno'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CadastroAluno(
+                      title: 'Página Inicial do Contador',
+                    ),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Configurações'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PaginaInicial(
+                      title: 'Página Inicial do Contador',
+                    ),
+                  ),
+                );
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text('Sair'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+          ],
         ),
       ),
-      home: const PaginaInicial(title: 'GabaritoPlus - WIP'), // Página
-      //cadastroProva: const PaginaInicial(title: 'GabaritoPlus - WIP'),  // Página
+      body: const Center(child: Text('Conteúdo Principal')),
     );
   }
 }
@@ -51,7 +122,7 @@ class _PaginaInicialState extends State<PaginaInicial> {
       ),
       body: Center(
         child: Column(
-          mainAxisAlignment: .center,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text('You have pushed the button this many times:'),
             Text(
