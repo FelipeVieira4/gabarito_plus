@@ -11,21 +11,22 @@ class ProfileView extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Perfil'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const CircleAvatar(
-              radius: 50,
-              child: Icon(Icons.person, size: 50),
-            ),
-            const SizedBox(height: 24),
-            _buildInfoRow('Nome', usuarioMock.nome),
-            _buildInfoRow('E-mail', usuarioMock.email),
-            _buildInfoRow('Departamento', usuarioMock.departamento),
-            const Spacer(),
-            ElevatedButton.icon(
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const CircleAvatar(
+                radius: 50,
+                child: Icon(Icons.person, size: 50),
+              ),
+              const SizedBox(height: 24),
+              _buildInfoRow('Nome', usuarioMock.nome),
+              _buildInfoRow('E-mail', usuarioMock.email),
+              _buildInfoRow('Departamento', usuarioMock.departamento),
+              const SizedBox(height: 32),
+              ElevatedButton.icon(
               onPressed: () {
                 Navigator.pushAndRemoveUntil(
                   context,
@@ -44,7 +45,8 @@ class ProfileView extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ),
+   );
   }
 
   Widget _buildInfoRow(String label, String value) {
