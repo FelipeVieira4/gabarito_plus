@@ -6,10 +6,10 @@ class CadastroAluno extends StatefulWidget {
   final String title;
 
   @override
-  State<CadastroAluno> createState() => _PaginaInicialState();
+  State<CadastroAluno> createState() => _CadastroAlunoState();
 }
 
-class _PaginaInicialState extends State<CadastroAluno> {
+class _CadastroAlunoState extends State<CadastroAluno> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -17,10 +17,10 @@ class _PaginaInicialState extends State<CadastroAluno> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: Center(
+      body: const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [const Text('TESTE')],
+          children: [Text('Tela de Cadastro de Aluno (Mock)')],
         ),
       ),
     );
