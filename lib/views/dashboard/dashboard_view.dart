@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:gabarito_plus/views/dashboard/dashboard_alunos.dart';
 import '../../mocks/mock_professor.dart';
 import '../auth/profile_view.dart';
-import '../alunos/consulta_aluno.dart';
 
 class DashboardView extends StatelessWidget {
   const DashboardView({super.key});
@@ -51,7 +51,7 @@ class DashboardView extends StatelessWidget {
                   Colors.blue,
                   () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const ConsultaAluno()),
+                    MaterialPageRoute(builder: (context) => const DashboardAluno()),
                   ),
                 ),
                 _buildMenuCard(
