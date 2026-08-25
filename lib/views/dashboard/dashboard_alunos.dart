@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:gabarito_plus/views/dashboard/dashboard_alunos.dart';
 import '../../mocks/mock_professor.dart';
 import '../auth/profile_view.dart';
+import '../alunos/consulta_aluno.dart';
+import '../alunos/cadastro_aluno.dart';
 
-class DashboardView extends StatelessWidget {
-  const DashboardView({super.key});
+class DashboardAluno extends StatelessWidget {
+  const DashboardAluno({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -28,15 +29,6 @@ class DashboardView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Olá, ${usuarioMock.nome}',
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              usuarioMock.departamento,
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 32),
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -46,35 +38,24 @@ class DashboardView extends StatelessWidget {
               children: [
                 _buildMenuCard(
                   context,
-                  'Turmas & Alunos',
-                  Icons.people,
+                  'Consulta Aluno',
+                  Icons.search,
                   Colors.blue,
                   () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const DashboardAluno()),
+                    MaterialPageRoute(builder: (context) => const ConsultaAluno()),
                   ),
                 ),
                 _buildMenuCard(
                   context,
-                  'Banco de Questões',
-                  Icons.quiz,
+                  'Cadastro de Aluno',
+                  Icons.create,
                   Colors.orange,
-                  () {}, // Módulo Esther
-                ),
-                _buildMenuCard(
-                  context,
-                  'Gerar Provas',
-                  Icons.description,
-                  Colors.green,
-                  () {}, // Módulo Vicenzo
-                ),
-                _buildMenuCard(
-                  context,
-                  'Corrigir Provas',
-                  Icons.camera_alt,
-                  Colors.red,
-                  () {}, // Módulo Natan
-                ),
+                  () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const CadastroAluno(title: "Cadastro de Aluno")),
+                  ), // Módulo Esther
+                )
               ],
             ),
           ],
