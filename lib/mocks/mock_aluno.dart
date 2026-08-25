@@ -26,5 +26,15 @@ final List<Aluno> listaAlunos = <Aluno>[
     id: '4',
     nome: 'Matheus Oliveira',
     email: 'matheusOliv23445@email.com'
+  ),
+  Aluno(
+    id: '5',
+    nome: 'Ricardo Diaz',
+    email: 'racardoTESTE123@email.com'
+  ),
+  Aluno(
+    id: '6',
+    nome: 'Miguel de Souza',
+    email: 'miguelSouza546@yahoo.com'
   )
 ];
