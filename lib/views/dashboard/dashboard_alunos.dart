@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../mocks/mock_professor.dart';
 import '../auth/profile_view.dart';
 import '../alunos/consulta_aluno.dart';
 import '../alunos/cadastro_aluno.dart';
