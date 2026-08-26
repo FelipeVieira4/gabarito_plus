@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:gabarito_plus/mocks/mock_questao.dart';
 import 'package:gabarito_plus/mocks/mock_turma.dart';
+import 'package:gabarito_plus/models/prova.dart';
 import 'package:gabarito_plus/models/questao.dart';
 import 'package:gabarito_plus/models/turma.dart';
+import 'package:gabarito_plus/views/provas/visualizacao_embaralhamento.dart';
 
 class ConfiguracaoProva extends StatefulWidget {
   const ConfiguracaoProva({super.key});
@@ -44,14 +46,22 @@ class _ConfiguracaoProvaState extends State<ConfiguracaoProva> {
       _mostrarAviso('A turma selecionada não possui alunos cadastrados');
       return;
     }
-    /* TODO: tela de visualização do embaralhamento de provas
+
+    final prova = Prova(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      titulo: _tituloController.text.trim(),
+      turma: _turmaSelecionada!,
+      questoes: _questoesSelecionadas.toList(),
+      embaralharQuestoes: _embaralharQuestoes,
+      embaralharAlternativas: _embaralharAlternativas,
+    );
+
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
+        builder: (context) => VisualizacaoEmbaralhamento(prova: prova),
       ),
     );
-    */
   }
 
   void _mostrarAviso(String mensagem) {
