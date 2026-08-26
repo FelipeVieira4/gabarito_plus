@@ -14,11 +14,29 @@ final Turma turmaMock = Turma(
       nome: 'Ana Maria',
       email: 'Ana63653@email.com'
     )
-  ]
+  ],
+  ativa: true,
 );
 
 
 final List<Turma> listaTurma = <Turma>[
+  Turma(
+    id: '1',
+    nomeTurma: 'Direito 06/2026',
+    listaAlunos: [
+      Aluno(
+        id: '2',
+        nome: 'Ana Maria',
+        email: 'Ana63653@email.com'
+      ),
+      Aluno(
+        id: '6',
+        nome: 'Miguel de Souza',
+        email: 'miguelSouza546@yahoo.com'
+      ),
+    ],
+    ativa: true,
+  ),
   Turma(
     id: '2',
     nomeTurma: 'Adiministração 01/2026',
@@ -32,7 +50,8 @@ final List<Turma> listaTurma = <Turma>[
         nome: 'Ana Maria',
         email: 'Ana63653@email.com'
       )
-    ]
+    ],
+    ativa: false,
   ),
   Turma(
     id: '3',
@@ -48,10 +67,11 @@ final List<Turma> listaTurma = <Turma>[
         nome: 'Matheus Oliveira',
         email: 'matheusOliv23445@email.com'
       ),
-    ]
+    ],
+    ativa: true,
   ),
   Turma(
-    id: '1',
+    id: '4',
     nomeTurma: 'Engenharia de Software 06/2025',
     listaAlunos: [
       Aluno(
@@ -64,6 +84,7 @@ final List<Turma> listaTurma = <Turma>[
         nome: 'Miguel de Souza',
         email: 'miguelSouza546@yahoo.com'
       )
-    ]
+    ],
+    ativa: true,
   )
 ];

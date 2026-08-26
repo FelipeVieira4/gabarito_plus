@@ -8,7 +8,7 @@ class CadastroTurma extends StatefulWidget {
   const CadastroTurma({super.key, required this.title, this.turma});
 
   final String title;
-  final Turma? turma; // se vier preenchido, já abre em modo edição
+  final Turma? turma;
 
   @override
   State<CadastroTurma> createState() => _CadastroTurmaState();
@@ -20,8 +20,9 @@ class _CadastroTurmaState extends State<CadastroTurma> {
   final _nomeTurmaController = TextEditingController();
 
   final Set<Aluno> _alunosSelecionados = {};
+  bool _situacaoTurma = true; // sem tristate: turma só é ativa ou inativa
 
-  Turma? _turmaEncontrada; // null = ID em branco ou não encontrado
+  Turma? _turmaEncontrada;
 
   bool get _isEdicao => _turmaEncontrada != null;
 
@@ -49,12 +50,14 @@ class _CadastroTurmaState extends State<CadastroTurma> {
       if (encontrada.isNotEmpty) {
         _turmaEncontrada = encontrada.first;
         _nomeTurmaController.text = _turmaEncontrada!.nomeTurma;
+        _situacaoTurma = _turmaEncontrada!.ativa;
         _alunosSelecionados
           ..clear()
           ..addAll(_turmaEncontrada!.listaAlunos);
       } else {
         _turmaEncontrada = null;
         _nomeTurmaController.clear();
+        _situacaoTurma = true;
         _alunosSelecionados.clear();
       }
     });
@@ -83,6 +86,7 @@ class _CadastroTurmaState extends State<CadastroTurma> {
             id: _turmaEncontrada!.id,
             nomeTurma: _nomeTurmaController.text.trim(),
             listaAlunos: _alunosSelecionados.toList(),
+            ativa: _situacaoTurma,
           );
         });
       }
@@ -99,6 +103,7 @@ class _CadastroTurmaState extends State<CadastroTurma> {
         id: novoId,
         nomeTurma: _nomeTurmaController.text.trim(),
         listaAlunos: _alunosSelecionados.toList(),
+        ativa: _situacaoTurma,
       );
 
       setState(() {
@@ -190,6 +195,26 @@ class _CadastroTurmaState extends State<CadastroTurma> {
                   }
                   return null;
                 },
+              ),
+              const SizedBox(height: 16),
+              // Situação da turma: ativa/inativa, sem estado indeterminado
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: BorderSide(color: Colors.grey.shade300),
+                ),
+                child: CheckboxListTile(
+                  value: _situacaoTurma,
+                  title: const Text('Turma ativa'),
+                  subtitle: Text(_situacaoTurma
+                      ? 'A turma está em andamento'
+                      : 'A turma está inativa/encerrada'),
+                  onChanged: (bool? value) {
+                    setState(() {
+                      _situacaoTurma = value ?? true;
+                    });
+                  },
+                ),
               ),
               const SizedBox(height: 24),
               Align(
