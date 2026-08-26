@@ -136,6 +136,8 @@ class _VersaoProvaCard extends StatelessWidget {
       child: ExpansionTile(
         shape: const RoundedRectangleBorder(side: BorderSide.none),
         collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
+        expandedAlignment: Alignment.centerLeft,
+        expandedCrossAxisAlignment: CrossAxisAlignment.start,
         leading: CircleAvatar(child: Text(versao.aluno.nome[0])),
         title: Text(versao.aluno.nome, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text('Código da versão: ${versao.codigo}'),
@@ -145,7 +147,7 @@ class _VersaoProvaCard extends StatelessWidget {
             final questaoEmbaralhada = entry.value;
 
             return Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -170,14 +172,17 @@ class _VersaoProvaCard extends StatelessWidget {
               ),
             );
           }),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                onPressed: onVerGabarito,
-                icon: const Icon(Icons.qr_code_2),
-                label: const Text('Ver Gabarito'),
+          SizedBox(
+            width: double.infinity,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: onVerGabarito,
+                  icon: const Icon(Icons.qr_code_2),
+                  label: const Text('Ver Gabarito'),
+                ),
               ),
             ),
           ),
