@@ -57,6 +57,22 @@ class _ConsultaTurmaState extends State<ConsultaTurma> {
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 subtitle: Text('${turma.listaAlunos.length} aluno(s)'),
+                trailing: IconButton(
+                  icon: const Icon(Icons.edit),
+                  tooltip: 'Editar Turma',
+                  onPressed: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CadastroTurma(
+                          title: 'Editar Turma',
+                          turma: turma,
+                        ),
+                      ),
+                    );
+                    setState(() {});
+                  },
+                ),
                 children: turma.listaAlunos.isEmpty
                     ? [
                         const Padding(
