@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:gabarito_plus/views/alunos/cadastro_aluno.dart';
+import 'package:gabarito_plus/views/alunos/consulta_aluno.dart';
 import 'package:gabarito_plus/views/turmas/cadastro_turma.dart';
 import 'package:gabarito_plus/views/turmas/consulta_turma.dart';
 import '../auth/profile_view.dart';
-import '../alunos/consulta_aluno.dart';
-import '../alunos/cadastro_aluno.dart';
 
 class DashboardAluno extends StatelessWidget {
   const DashboardAluno({super.key});

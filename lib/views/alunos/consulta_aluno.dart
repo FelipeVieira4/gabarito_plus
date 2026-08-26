@@ -24,14 +24,12 @@ class _ConsultaAlunoState extends State<ConsultaAluno> {
             icon: const Icon(Icons.person_add),
             tooltip: 'Cadastrar Aluno',
             onPressed: () async {
-              // Abre a tela de cadastro e espera o usuário voltar
               await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => const CadastroAluno(title: 'Cadastro de Aluno'),
                 ),
               );
-              // Força a atualização da lista após inserir o novo registro
               setState(() {});
             },
           ),
@@ -45,10 +43,10 @@ class _ConsultaAlunoState extends State<ConsultaAluno> {
             crossAxisCount: 1,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: 4.5, // Alterado de 9.5 para 4.5 para evitar overflow na altura
+            childAspectRatio: 4.5,
           ),
           itemBuilder: (context, index) {
-            final aluno = listaAlunos[index];
+            final aluno = listaAlunos[index]; // <-- aluno é criado aqui
 
             return Card(
               elevation: 2,
@@ -89,6 +87,22 @@ class _ConsultaAlunoState extends State<ConsultaAluno> {
                           ),
                         ],
                       ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.edit),
+                      tooltip: 'Editar Aluno',
+                      onPressed: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CadastroAluno(
+                              title: 'Editar Aluno',
+                              aluno: aluno,
+                            ),
+                          ),
+                        );
+                        setState(() {});
+                      },
                     ),
                   ],
                 ),
