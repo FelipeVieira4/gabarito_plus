@@ -70,6 +70,8 @@ class _ConfiguracaoProvaState extends State<ConfiguracaoProva> {
 
   @override
   Widget build(BuildContext context) {
+    final totalQuestoesSelecionadas = _questoesSelecionadas.length;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Configuração da Prova')),
       body: SingleChildScrollView(
@@ -153,7 +155,7 @@ class _ConfiguracaoProvaState extends State<ConfiguracaoProva> {
               ),
               const SizedBox(height: 8),
               Text(
-                '${_questoesSelecionadas.length} questão(ões) selecionada(s)',
+                '$totalQuestoesSelecionadas ${totalQuestoesSelecionadas == 1 ? "questão selecionada" : "questões selecionadas"}',
                 style: TextStyle(color: Colors.grey[600], fontSize: 12),
               ),
               const SizedBox(height: 24),
