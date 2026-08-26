@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gabarito_plus/models/embaralhador.dart';
 import 'package:gabarito_plus/models/prova.dart';
 import 'package:gabarito_plus/models/versao_prova.dart';
+import 'package:gabarito_plus/views/provas/gabarito_qrcode.dart';
 
 class VisualizacaoEmbaralhamento extends StatefulWidget {
   const VisualizacaoEmbaralhamento({super.key, required this.prova});
@@ -97,15 +98,12 @@ class _VisualizacaoEmbaralhamentoState extends State<VisualizacaoEmbaralhamento>
                 final versao = _versoes[index];
                 return _VersaoProvaCard(
                   versao: versao,
-                  onVerGabarito: () {}
-                  /* TODO: gabarito da prova
-                  Navigator.push(
+                  onVerGabarito: () => Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
+                      builder: (context) => GabaritoQrCode(prova: prova, versao: versao),
                     ),
                   ),
-                  */
                 );
               },
             ),
