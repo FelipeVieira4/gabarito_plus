@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gabarito_plus/views/dashboard/dashboard_alunos.dart';
+import 'package:gabarito_plus/views/provas/configuracao_prova.dart';
 import '../../mocks/mock_professor.dart';
 import '../auth/profile_view.dart';
 
@@ -66,7 +67,10 @@ class DashboardView extends StatelessWidget {
                   'Gerar Provas',
                   Icons.description,
                   Colors.green,
-                  () {}, // Módulo Vicenzo
+                  () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ConfiguracaoProva()),
+                  ),
                 ),
                 _buildMenuCard(
                   context,
