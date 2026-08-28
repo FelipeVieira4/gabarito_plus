@@ -55,6 +55,8 @@ class _VisualizacaoEmbaralhamentoState extends State<VisualizacaoEmbaralhamento>
                   children: [
                     Text(prova.titulo, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                     const SizedBox(height: 4),
+                    Text('Assunto: ${prova.assunto.nome}'),
+                    const SizedBox(height: 2),
                     Text('${prova.turma.nomeTurma} · ${prova.questoes.length} questões · ${_versoes.length} variações geradas'),
                     const SizedBox(height: 8),
                     Wrap(

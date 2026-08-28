@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:gabarito_plus/mocks/mock_questao.dart';
+import 'package:gabarito_plus/mocks/mock_assunto.dart';
 import 'package:gabarito_plus/mocks/mock_turma.dart';
+import 'package:gabarito_plus/models/assunto.dart';
 import 'package:gabarito_plus/models/prova.dart';
 import 'package:gabarito_plus/models/questao.dart';
 import 'package:gabarito_plus/models/turma.dart';
@@ -18,6 +19,7 @@ class _ConfiguracaoProvaState extends State<ConfiguracaoProva> {
   final _tituloController = TextEditingController();
 
   Turma? _turmaSelecionada;
+  Assunto? _assuntoSelecionado;
   final Set<Questao> _questoesSelecionadas = {};
 
   bool _embaralharQuestoes = true;
@@ -37,6 +39,11 @@ class _ConfiguracaoProvaState extends State<ConfiguracaoProva> {
       return;
     }
 
+    if (_assuntoSelecionado == null) {
+      _mostrarAviso('Selecione o assunto da prova');
+      return;
+    }
+
     if (_questoesSelecionadas.isEmpty) {
       _mostrarAviso('Selecione ao menos uma questão para a prova');
       return;
@@ -51,6 +58,7 @@ class _ConfiguracaoProvaState extends State<ConfiguracaoProva> {
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       titulo: _tituloController.text.trim(),
       turma: _turmaSelecionada!,
+      assunto: _assuntoSelecionado!,
       questoes: _questoesSelecionadas.toList(),
       embaralharQuestoes: _embaralharQuestoes,
       embaralharAlternativas: _embaralharAlternativas,
@@ -113,51 +121,88 @@ class _ConfiguracaoProvaState extends State<ConfiguracaoProva> {
                     .toList(),
                 onChanged: (turma) => setState(() => _turmaSelecionada = turma),
               ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<Assunto>(
+                initialValue: _assuntoSelecionado,
+                decoration: const InputDecoration(
+                  labelText: 'Assunto da Prova',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.topic),
+                ),
+                items: bancoAssuntosMock
+                    .map(
+                      (assunto) => DropdownMenuItem(
+                        value: assunto,
+                        child: Text('${assunto.nome} (${assunto.questoes.length} questões)'),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (assunto) => setState(() {
+                  _assuntoSelecionado = assunto;
+                  _questoesSelecionadas.clear();
+                }),
+              ),
               const SizedBox(height: 24),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Selecione as questões',
-                  style: Theme.of(context).textTheme.titleMedium,
+              if (_assuntoSelecionado == null)
+                Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    side: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  child: const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text(
+                      'Selecione um assunto para listar as questões relacionadas',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ),
+                )
+              else ...[
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Questões de ${_assuntoSelecionado!.nome}',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  side: BorderSide(color: Colors.grey.shade300),
-                ),
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: bancoQuestoesMock.length,
-                  separatorBuilder: (_, _) => const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    final questao = bancoQuestoesMock[index];
-                    final selecionada = _questoesSelecionadas.contains(questao);
+                const SizedBox(height: 8),
+                Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    side: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _assuntoSelecionado!.questoes.length,
+                    separatorBuilder: (_, _) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final questao = _assuntoSelecionado!.questoes[index];
+                      final selecionada = _questoesSelecionadas.contains(questao);
 
-                    return CheckboxListTile(
-                      value: selecionada,
-                      title: Text(questao.enunciado),
-                      subtitle: Text('${questao.alternativas.length} alternativas'),
-                      onChanged: (checked) {
-                        setState(() {
-                          if (checked == true) {
-                            _questoesSelecionadas.add(questao);
-                          } else {
-                            _questoesSelecionadas.remove(questao);
-                          }
-                        });
-                      },
-                    );
-                  },
+                      return CheckboxListTile(
+                        value: selecionada,
+                        title: Text(questao.enunciado),
+                        subtitle: Text('${questao.alternativas.length} alternativas'),
+                        onChanged: (checked) {
+                          setState(() {
+                            if (checked == true) {
+                              _questoesSelecionadas.add(questao);
+                            } else {
+                              _questoesSelecionadas.remove(questao);
+                            }
+                          });
+                        },
+                      );
+                    },
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '$totalQuestoesSelecionadas ${totalQuestoesSelecionadas == 1 ? "questão selecionada" : "questões selecionadas"}',
-                style: TextStyle(color: Colors.grey[600], fontSize: 12),
-              ),
+                const SizedBox(height: 8),
+                Text(
+                  '$totalQuestoesSelecionadas ${totalQuestoesSelecionadas == 1 ? "questão selecionada" : "questões selecionadas"}',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                ),
+              ],
               const SizedBox(height: 24),
               Align(
                 alignment: Alignment.centerLeft,
