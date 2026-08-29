@@ -106,6 +106,7 @@ class _ConfiguracaoProvaState extends State<ConfiguracaoProva> {
               const SizedBox(height: 16),
               DropdownButtonFormField<Turma>(
                 initialValue: _turmaSelecionada,
+                isExpanded: true,
                 decoration: const InputDecoration(
                   labelText: 'Turma',
                   border: OutlineInputBorder(),
@@ -115,7 +116,10 @@ class _ConfiguracaoProvaState extends State<ConfiguracaoProva> {
                     .map(
                       (turma) => DropdownMenuItem(
                         value: turma,
-                        child: Text(turma.nomeTurma),
+                        child: Text(
+                          turma.nomeTurma,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     )
                     .toList(),
@@ -124,6 +128,7 @@ class _ConfiguracaoProvaState extends State<ConfiguracaoProva> {
               const SizedBox(height: 16),
               DropdownButtonFormField<Assunto>(
                 initialValue: _assuntoSelecionado,
+                isExpanded: true,
                 decoration: const InputDecoration(
                   labelText: 'Assunto da Prova',
                   border: OutlineInputBorder(),
@@ -133,7 +138,10 @@ class _ConfiguracaoProvaState extends State<ConfiguracaoProva> {
                     .map(
                       (assunto) => DropdownMenuItem(
                         value: assunto,
-                        child: Text('${assunto.nome} (${assunto.questoes.length} questões)'),
+                        child: Text(
+                          '${assunto.nome} (${assunto.questoes.length} questões)',
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     )
                     .toList(),
