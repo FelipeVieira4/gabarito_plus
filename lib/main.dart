@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:gabarito_plus/views/questoes/lista_questoes_view.dart';
 import 'views/auth/login_view.dart';
 
 void main() {
@@ -18,7 +17,7 @@ class GabaritoPlus extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const ListaQuestoesView(),
+      home: const LoginView(),
     );
   }
 }
