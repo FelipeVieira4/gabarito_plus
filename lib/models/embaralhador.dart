@@ -14,16 +14,20 @@ class Embaralhador {
       }
 
       final questoesEmbaralhadas = questoes.map((questao) {
-        final indices = List.generate(questao.alternativas.length, (i) => i);
+        
+        final alternativasEmbaralhadas = List.of(questao.alternativas);
+
         if (prova.embaralharAlternativas) {
-          indices.shuffle(random);
+          alternativasEmbaralhadas.shuffle(random);
         }
+
+        final indexCorreta = alternativasEmbaralhadas.indexWhere((alt) => alt.isCorreta);
 
         return QuestaoEmbaralhada(
           questao: questao,
-          alternativas: indices.map((i) => questao.alternativas[i]).toList(),
-          respostaCorreta: indices.indexOf(questao.respostaCorreta),
-        );
+        alternativas: alternativasEmbaralhadas.map((alt) => alt.texto).toList(),
+          respostaCorreta: indexCorreta,
+          );
       }).toList();
 
       return VersaoProva(
