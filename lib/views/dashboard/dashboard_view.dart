@@ -3,6 +3,7 @@ import 'package:gabarito_plus/views/dashboard/dashboard_alunos.dart';
 import 'package:gabarito_plus/views/provas/configuracao_prova.dart';
 import '../../mocks/mock_professor.dart';
 import '../auth/profile_view.dart';
+import '../questoes/lista_questoes_view.dart';
 
 class DashboardView extends StatelessWidget {
   const DashboardView({super.key});
@@ -60,7 +61,10 @@ class DashboardView extends StatelessWidget {
                   'Banco de Questões',
                   Icons.quiz,
                   Colors.orange,
-                  () {}, // Módulo Esther
+                  () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ListaQuestoesView()),
+                  ), // Módulo Esther
                 ),
                 _buildMenuCard(
                   context,
