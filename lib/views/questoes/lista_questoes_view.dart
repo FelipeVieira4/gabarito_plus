@@ -103,12 +103,21 @@ class _ListaQuestoesViewState extends State<ListaQuestoesView> {
       ),
 
       // 5. BOTÃO FLUTUANTE DE CADASTRO
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
+floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          // Aguarda o retorno da tela de cadastro
+          final novaQuestao = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const CadastroQuestaoView()),
           );
+
+          // Se recebeu a questão, adiciona na lista e atualiza a tela
+          if (novaQuestao != null) {
+            setState(() {
+              questoes.add(novaQuestao);
+              questoesFiltradas = List.from(questoes);
+            });
+          }
         },
         child: const Icon(Icons.add),
       ),

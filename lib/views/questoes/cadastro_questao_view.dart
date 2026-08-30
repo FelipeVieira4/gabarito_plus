@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:gabarito_plus/models/alternativa.dart';
+import '../../models/questao.dart';
 
 class CadastroQuestaoView extends StatefulWidget {
   const CadastroQuestaoView({super.key});
@@ -105,12 +107,26 @@ class _CadastroQuestaoViewState extends State<CadastroQuestaoView> {
             ElevatedButton(
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
+                  final novaQuestao = Questao(
+                    id: DateTime.now().toString(), // <- ID automático gerado aqui!
+                    disciplina: _disciplinaController.text,
+                    assunto: _assuntoController.text,
+                    enunciado: _enunciadoController.text,
+                    alternativas: List.generate(4, (index) {
+                      return Alternativa(
+                        texto: _alternativasControllers[index].text,
+                        isCorreta: index == _alternativaCorretaIndex,
+                      );
+                    }), // <- Parêntese corrigido aqui!
+                  );
+
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                         content: Text('Questão cadastrada com sucesso!'),
                         backgroundColor: Colors.green),
                   );
-                  Navigator.pop(context); 
+                  
+                  Navigator.pop(context, novaQuestao); 
                 }
               },
               style: ElevatedButton.styleFrom(
