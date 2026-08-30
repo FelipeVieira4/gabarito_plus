@@ -24,7 +24,24 @@ class ProfileView extends StatelessWidget {
               const SizedBox(height: 24),
               _buildInfoRow('Nome', usuarioMock.nome),
               _buildInfoRow('E-mail', usuarioMock.email),
-              _buildInfoRow('Departamento', usuarioMock.departamento),
+              const SizedBox(height: 16),
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Matérias', style: TextStyle(fontSize: 14, color: Colors.grey)),
+              ),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: usuarioMock.materias.map((materia) => Chip(
+                    label: Text(materia),
+                    backgroundColor: Colors.blue[50],
+                  )).toList(),
+                ),
+              ),
+              const Divider(),
               const SizedBox(height: 32),
               ElevatedButton.icon(
               onPressed: () {

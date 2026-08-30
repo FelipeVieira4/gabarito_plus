@@ -4,5 +4,9 @@ final Professor usuarioMock = Professor(
   id: '1',
   nome: 'Prof. Teste',
   email: 'admin@email.com',
-  departamento: 'Engenharia de Software',
+  materias: [
+    'Engenharia de Software',
+    'Algoritmos e Lógica',
+    'Desenvolvimento Mobile',
+  ],
 );
