@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gabarito_plus/views/questoes/detalhes_questoes_view.dart';
 import '../../mocks/mock_assunto.dart';
 import '../../models/questao.dart';
 
@@ -40,9 +41,11 @@ class _ListaQuestoesViewState extends State<ListaQuestoesView> {
             subtitle: Text('${questao.disciplina} - ${questao.assunto}'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16.0),
             onTap: () {
-              
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Navegação em contrução...' )),
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DetalhesQuestaoView(questao: questao),
+                ),
               );
             },
             ),
