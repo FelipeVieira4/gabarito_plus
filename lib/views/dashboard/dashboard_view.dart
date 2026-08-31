@@ -3,7 +3,7 @@ import 'package:gabarito_plus/views/dashboard/dashboard_alunos.dart';
 import 'package:gabarito_plus/views/provas/configuracao_prova.dart';
 import '../../mocks/mock_professor.dart';
 import '../auth/profile_view.dart';
-import '../questoes/lista_questoes_view.dart';
+import '../questoes/consulta_questoes.dart';
 
 class DashboardView extends StatelessWidget {
   const DashboardView({super.key});

@@ -2,10 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:gabarito_plus/mocks/mock_aluno.dart';
 import 'package:gabarito_plus/views/alunos/cadastro_aluno.dart'; // Ajuste o caminho da sua tela de cadastro
 
-// TODO: páginação quando dados vier pela API
-// rodapé com opções de exportação de dados(colocar em um uilitario)
-// adicionar opções de filtros como semestro, ativos etc...
-
 class ConsultaAluno extends StatefulWidget {
   const ConsultaAluno({super.key});
 
