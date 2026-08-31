@@ -35,8 +35,10 @@ class DashboardView extends StatelessWidget {
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             Text(
-              usuarioMock.departamento,
+              usuarioMock.materias.join(' • '),
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 32),
             GridView.count(
