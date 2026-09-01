@@ -1,3 +1,5 @@
+// ignore_for_file: unused_element_parameter
+
 import 'package:flutter/material.dart';
 import 'package:gabarito_plus/views/alunos/cadastro_aluno.dart';
 import 'package:gabarito_plus/views/alunos/consulta_aluno.dart';

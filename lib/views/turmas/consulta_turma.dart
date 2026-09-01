@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:gabarito_plus/mocks/mock_turma.dart';
 import 'package:gabarito_plus/models/turma.dart';
-import 'package:gabarito_plus/services/TurmaService.dart'; // ajuste o caminho
+import 'package:gabarito_plus/services/turma_service.dart'; // ajuste o caminho
 import 'package:gabarito_plus/views/turmas/cadastro_turma.dart'; // ajuste o caminho
 
-// TODO: paginação quando os dados vierem da API
-// adicionar filtro por nome/período
 
 class ConsultaTurma extends StatefulWidget {
   const ConsultaTurma({super.key});
@@ -80,7 +78,7 @@ class _ConsultaTurmaState extends State<ConsultaTurma> {
                     )
                   : ListView.separated(
                       itemCount: turmas.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      separatorBuilder: (_, _) => const SizedBox(height: 12),
                       itemBuilder: (context, index) {
                         final turma = turmas[index];
 

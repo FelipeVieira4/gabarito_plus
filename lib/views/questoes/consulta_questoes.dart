@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:gabarito_plus/views/questoes/detalhes_questoes_view.dart';
+import 'package:gabarito_plus/views/questoes/detalhes_questoes.dart';
 import '../../mocks/mock_assunto.dart';
 import '../../models/questao.dart';
-import 'cadastro_questao_view.dart';
+import 'cadastro_questao.dart';
 
 class ListaQuestoesView extends StatefulWidget {
   const ListaQuestoesView({super.key});
