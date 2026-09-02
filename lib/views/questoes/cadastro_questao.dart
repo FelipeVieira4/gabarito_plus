@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:gabarito_plus/models/alternativa.dart';
-import '../../models/questao.dart';
+import 'package:gabarito_plus/models/assunto.dart';
+import 'package:gabarito_plus/models/disciplina.dart';
+import 'package:gabarito_plus/services/questoes_service.dart';
 
 class CadastroQuestaoView extends StatefulWidget {
   const CadastroQuestaoView({super.key});
@@ -10,16 +12,27 @@ class CadastroQuestaoView extends StatefulWidget {
 }
 
 class _CadastroQuestaoViewState extends State<CadastroQuestaoView> {
+  final _service = QuestoesService();
   final _formKey = GlobalKey<FormState>();
   final _enunciadoController = TextEditingController();
-  final _disciplinaController = TextEditingController();
-  final _assuntoController = TextEditingController();
   final List<TextEditingController> _alternativasControllers =
       List.generate(4, (_) => TextEditingController());
   int _alternativaCorretaIndex = 0;
 
+  late final List<Disciplina> _disciplinas;
+  Disciplina? _disciplinaSelecionada;
+  Assunto? _assuntoSelecionado;
+
+  @override
+  void initState() {
+    super.initState();
+    _disciplinas = _service.obterDisciplinas();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final assuntosDaDisciplina = _disciplinaSelecionada?.assuntos ?? const [];
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Cadastrar Questão'),
@@ -29,20 +42,51 @@ class _CadastroQuestaoViewState extends State<CadastroQuestaoView> {
         child: ListView(
           padding: const EdgeInsets.all(16.0),
           children: [
-            TextFormField(
-              controller: _disciplinaController,
+            DropdownButtonFormField<Disciplina>(
+              initialValue: _disciplinaSelecionada,
               decoration: const InputDecoration(
                   labelText: 'Disciplina', border: OutlineInputBorder()),
-              validator: (value) =>
-                  value == null || value.isEmpty ? 'Campo obrigatório' : null,
+              items: _disciplinas
+                  .map((disciplina) => DropdownMenuItem(
+                        value: disciplina,
+                        child: Text(disciplina.descricao),
+                      ))
+                  .toList(),
+              onChanged: (disciplina) {
+                setState(() {
+                  _disciplinaSelecionada = disciplina;
+                  // Assunto pertence a uma disciplina específica, então
+                  // toda vez que a disciplina muda a seleção antiga não
+                  // faz mais sentido.
+                  _assuntoSelecionado = null;
+                });
+              },
+              validator: (disciplina) =>
+                  disciplina == null ? 'Selecione uma disciplina' : null,
             ),
             const SizedBox(height: 16),
-            TextFormField(
-              controller: _assuntoController,
+            DropdownButtonFormField<Assunto>(
+              initialValue: _assuntoSelecionado,
               decoration: const InputDecoration(
                   labelText: 'Assunto', border: OutlineInputBorder()),
-              validator: (value) =>
-                  value == null || value.isEmpty ? 'Campo obrigatório' : null,
+              items: assuntosDaDisciplina
+                  .map((assunto) => DropdownMenuItem(
+                        value: assunto,
+                        child: Text(assunto.nome),
+                      ))
+                  .toList(),
+              onChanged: _disciplinaSelecionada == null
+                  ? null
+                  : (assunto) {
+                      setState(() {
+                        _assuntoSelecionado = assunto;
+                      });
+                    },
+              validator: (assunto) =>
+                  assunto == null ? 'Selecione um assunto' : null,
+              hint: _disciplinaSelecionada == null
+                  ? const Text('Selecione a disciplina primeiro')
+                  : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -58,7 +102,6 @@ class _CadastroQuestaoViewState extends State<CadastroQuestaoView> {
             const Text('Alternativas (Marque a correta):',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(height: 8),
-
             Column(
               children: List.generate(4, (index) {
                 return Padding(
@@ -102,22 +145,24 @@ class _CadastroQuestaoViewState extends State<CadastroQuestaoView> {
                 );
               }),
             ),
-
             const SizedBox(height: 32),
             ElevatedButton(
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
-                  final novaQuestao = Questao(
-                    id: DateTime.now().toString(), // <- ID automático gerado aqui!
-                    disciplina: _disciplinaController.text,
-                    assunto: _assuntoController.text,
+                  final novaQuestao = _service.criarQuestao(
                     enunciado: _enunciadoController.text,
                     alternativas: List.generate(4, (index) {
                       return Alternativa(
                         texto: _alternativasControllers[index].text,
                         isCorreta: index == _alternativaCorretaIndex,
                       );
-                    }), // <- Parêntese corrigido aqui!
+                    }),
+                  );
+
+                  _service.adicionarQuestao(
+                    disciplinaId: _disciplinaSelecionada!.id,
+                    assuntoId: _assuntoSelecionado!.id,
+                    questao: novaQuestao,
                   );
 
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -125,13 +170,16 @@ class _CadastroQuestaoViewState extends State<CadastroQuestaoView> {
                         content: Text('Questão cadastrada com sucesso!'),
                         backgroundColor: Colors.green),
                   );
-                  
-                  Navigator.pop(context, novaQuestao); 
+
+                  // Só avisa a tela anterior que precisa recarregar a
+                  // lista; quem detém os dados agora é o QuestoesService.
+                  Navigator.pop(context, true);
                 }
               },
               style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16)),
-              child: const Text('Salvar Questão', style: TextStyle(fontSize: 16)),
+              child:
+                  const Text('Salvar Questão', style: TextStyle(fontSize: 16)),
             ),
           ],
         ),
@@ -142,8 +190,6 @@ class _CadastroQuestaoViewState extends State<CadastroQuestaoView> {
   @override
   void dispose() {
     _enunciadoController.dispose();
-    _disciplinaController.dispose();
-    _assuntoController.dispose();
     for (var controller in _alternativasControllers) {
       controller.dispose();
     }
