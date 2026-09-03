@@ -43,8 +43,6 @@ class _ListaQuestoesViewState extends State<ListaQuestoesView> {
   void _selecionarDisciplinaFiltro(Disciplina? disciplina) {
     setState(() {
       _disciplinaFiltro = disciplina;
-      // Um assunto só existe dentro de uma disciplina, então trocar a
-      // disciplina invalida o assunto filtrado antes.
       _assuntoFiltro = null;
     });
     _aplicarFiltros();
@@ -64,6 +62,27 @@ class _ListaQuestoesViewState extends State<ListaQuestoesView> {
       _assuntoFiltro = null;
     });
     _aplicarFiltros();
+  }
+
+  Future<void> _abrirEdicaoQuestao(
+    Questao questao,
+    Disciplina? disciplina,
+    Assunto? assunto,
+  ) async {
+    final editouComSucesso = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CadastroQuestaoView(
+          questaoParaEditar: questao,
+          disciplinaInicial: disciplina,
+          assuntoInicial: assunto,
+        ),
+      ),
+    );
+
+    if (editouComSucesso == true) {
+      _aplicarFiltros();
+    }
   }
 
   @override
@@ -99,7 +118,7 @@ class _ListaQuestoesViewState extends State<ListaQuestoesView> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<Disciplina>(
-                    initialValue: _disciplinaFiltro,
+                    value: _disciplinaFiltro,
                     isExpanded: true,
                     decoration: const InputDecoration(
                       labelText: 'Disciplina',
@@ -119,7 +138,7 @@ class _ListaQuestoesViewState extends State<ListaQuestoesView> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: DropdownButtonFormField<Assunto>(
-                    initialValue: _assuntoFiltro,
+                    value: _assuntoFiltro,
                     isExpanded: true,
                     decoration: const InputDecoration(
                       labelText: 'Assunto',
@@ -171,9 +190,22 @@ class _ListaQuestoesViewState extends State<ListaQuestoesView> {
                             overflow: TextOverflow.ellipsis,
                           ),
                           subtitle: Text(
-                              '${disciplina?.descricao ?? '-'} - ${assunto?.nome ?? '-'}'),
-                          trailing:
+                            '${disciplina?.descricao ?? '-'} - ${assunto?.nome ?? '-'}',
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit, color: Colors.blue),
+                                tooltip: 'Editar questão',
+                                onPressed: () {
+                                  _abrirEdicaoQuestao(
+                                      questao, disciplina, assunto);
+                                },
+                              ),
                               const Icon(Icons.arrow_forward_ios, size: 16.0),
+                            ],
+                          ),
                           onTap: () {
                             if (disciplina == null || assunto == null) return;
                             Navigator.push(
@@ -199,11 +231,10 @@ class _ListaQuestoesViewState extends State<ListaQuestoesView> {
           final cadastrouComSucesso = await Navigator.push<bool>(
             context,
             MaterialPageRoute(
-                builder: (context) => const CadastroQuestaoView()),
+              builder: (context) => const CadastroQuestaoView(),
+            ),
           );
 
-          // A questão nova já foi salva pelo QuestoesService dentro da
-          // tela de cadastro; aqui só recarregamos os filtros atuais.
           if (cadastrouComSucesso == true) {
             _aplicarFiltros();
           }

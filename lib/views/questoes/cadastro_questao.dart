@@ -2,10 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:gabarito_plus/models/alternativa.dart';
 import 'package:gabarito_plus/models/assunto.dart';
 import 'package:gabarito_plus/models/disciplina.dart';
+import 'package:gabarito_plus/models/questao.dart';
 import 'package:gabarito_plus/services/questoes_service.dart';
 
 class CadastroQuestaoView extends StatefulWidget {
-  const CadastroQuestaoView({super.key});
+  final Questao? questaoParaEditar;
+  final Disciplina? disciplinaInicial;
+  final Assunto? assuntoInicial;
+
+  const CadastroQuestaoView({
+    super.key,
+    this.questaoParaEditar,
+    this.disciplinaInicial,
+    this.assuntoInicial,
+  });
+
+  bool get isEdicao => questaoParaEditar != null;
 
   @override
   State<CadastroQuestaoView> createState() => _CadastroQuestaoViewState();
@@ -27,6 +39,32 @@ class _CadastroQuestaoViewState extends State<CadastroQuestaoView> {
   void initState() {
     super.initState();
     _disciplinas = _service.obterDisciplinas();
+
+    if (widget.isEdicao) {
+      _carregarDadosEdicao();
+    }
+  }
+
+  void _carregarDadosEdicao() {
+    final q = widget.questaoParaEditar!;
+    _enunciadoController.text = q.enunciado;
+
+    // Tenta encontrar a disciplina e assunto passados ou resolver pelo serviço
+    _disciplinaSelecionada = widget.disciplinaInicial ??
+        _service.obterDisciplinaDaQuestao(q);
+
+    if (_disciplinaSelecionada != null) {
+      _assuntoSelecionado = widget.assuntoInicial ??
+          _service.obterAssuntoDaQuestao(q);
+    }
+
+    // Preenche as alternativas
+    for (int i = 0; i < q.alternativas.length && i < 4; i++) {
+      _alternativasControllers[i].text = q.alternativas[i].texto;
+      if (q.alternativas[i].isCorreta) {
+        _alternativaCorretaIndex = i;
+      }
+    }
   }
 
   @override
@@ -35,7 +73,7 @@ class _CadastroQuestaoViewState extends State<CadastroQuestaoView> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Cadastrar Questão'),
+        title: Text(widget.isEdicao ? 'Editar Questão' : 'Cadastrar Questão'),
       ),
       body: Form(
         key: _formKey,
@@ -43,9 +81,11 @@ class _CadastroQuestaoViewState extends State<CadastroQuestaoView> {
           padding: const EdgeInsets.all(16.0),
           children: [
             DropdownButtonFormField<Disciplina>(
-              initialValue: _disciplinaSelecionada,
+              value: _disciplinaSelecionada,
               decoration: const InputDecoration(
-                  labelText: 'Disciplina', border: OutlineInputBorder()),
+                labelText: 'Disciplina',
+                border: OutlineInputBorder(),
+              ),
               items: _disciplinas
                   .map((disciplina) => DropdownMenuItem(
                         value: disciplina,
@@ -55,9 +95,6 @@ class _CadastroQuestaoViewState extends State<CadastroQuestaoView> {
               onChanged: (disciplina) {
                 setState(() {
                   _disciplinaSelecionada = disciplina;
-                  // Assunto pertence a uma disciplina específica, então
-                  // toda vez que a disciplina muda a seleção antiga não
-                  // faz mais sentido.
                   _assuntoSelecionado = null;
                 });
               },
@@ -66,9 +103,11 @@ class _CadastroQuestaoViewState extends State<CadastroQuestaoView> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<Assunto>(
-              initialValue: _assuntoSelecionado,
+              value: _assuntoSelecionado,
               decoration: const InputDecoration(
-                  labelText: 'Assunto', border: OutlineInputBorder()),
+                labelText: 'Assunto',
+                border: OutlineInputBorder(),
+              ),
               items: assuntosDaDisciplina
                   .map((assunto) => DropdownMenuItem(
                         value: assunto,
@@ -92,15 +131,18 @@ class _CadastroQuestaoViewState extends State<CadastroQuestaoView> {
             TextFormField(
               controller: _enunciadoController,
               decoration: const InputDecoration(
-                  labelText: 'Enunciado da Questão',
-                  border: OutlineInputBorder()),
+                labelText: 'Enunciado da Questão',
+                border: OutlineInputBorder(),
+              ),
               maxLines: 3,
               validator: (value) =>
                   value == null || value.isEmpty ? 'Campo obrigatório' : null,
             ),
             const SizedBox(height: 24),
-            const Text('Alternativas (Marque a correta):',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const Text(
+              'Alternativas (Marque a correta):',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
             const SizedBox(height: 8),
             Column(
               children: List.generate(4, (index) {
@@ -134,10 +176,9 @@ class _CadastroQuestaoViewState extends State<CadastroQuestaoView> {
                                 'Alternativa ${String.fromCharCode(65 + index)}',
                             border: const OutlineInputBorder(),
                           ),
-                          validator: (value) =>
-                              value == null || value.isEmpty
-                                  ? 'Campo obrigatório'
-                                  : null,
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'Campo obrigatório'
+                              : null,
                         ),
                       ),
                     ],
@@ -149,37 +190,59 @@ class _CadastroQuestaoViewState extends State<CadastroQuestaoView> {
             ElevatedButton(
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
-                  final novaQuestao = _service.criarQuestao(
-                    enunciado: _enunciadoController.text,
-                    alternativas: List.generate(4, (index) {
-                      return Alternativa(
-                        texto: _alternativasControllers[index].text,
-                        isCorreta: index == _alternativaCorretaIndex,
-                      );
-                    }),
-                  );
+                  final alternativas = List.generate(4, (index) {
+                    return Alternativa(
+                      texto: _alternativasControllers[index].text,
+                      isCorreta: index == _alternativaCorretaIndex,
+                    );
+                  });
 
-                  _service.adicionarQuestao(
-                    disciplinaId: _disciplinaSelecionada!.id,
-                    assuntoId: _assuntoSelecionado!.id,
-                    questao: novaQuestao,
-                  );
+                  if (widget.isEdicao) {
+                    final questaoAtualizada = Questao(
+                      id: widget.questaoParaEditar!.id,
+                      enunciado: _enunciadoController.text,
+                      alternativas: alternativas,
+                    );
+
+                    _service.editarQuestao(
+                      disciplinaId: _disciplinaSelecionada!.id,
+                      assuntoId: _assuntoSelecionado!.id,
+                      questao: questaoAtualizada,
+                    );
+                  } else {
+                    final novaQuestao = _service.criarQuestao(
+                      enunciado: _enunciadoController.text,
+                      alternativas: alternativas,
+                    );
+
+                    _service.adicionarQuestao(
+                      disciplinaId: _disciplinaSelecionada!.id,
+                      assuntoId: _assuntoSelecionado!.id,
+                      questao: novaQuestao,
+                    );
+                  }
 
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Questão cadastrada com sucesso!'),
-                        backgroundColor: Colors.green),
+                    SnackBar(
+                      content: Text(
+                        widget.isEdicao
+                            ? 'Questão atualizada com sucesso!'
+                            : 'Questão cadastrada com sucesso!',
+                      ),
+                      backgroundColor: Colors.green,
+                    ),
                   );
 
-                  // Só avisa a tela anterior que precisa recarregar a
-                  // lista; quem detém os dados agora é o QuestoesService.
                   Navigator.pop(context, true);
                 }
               },
               style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16)),
-              child:
-                  const Text('Salvar Questão', style: TextStyle(fontSize: 16)),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              child: Text(
+                widget.isEdicao ? 'Salvar Alterações' : 'Salvar Questão',
+                style: const TextStyle(fontSize: 16),
+              ),
             ),
           ],
         ),

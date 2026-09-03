@@ -1,4 +1,4 @@
-import 'package:gabarito_plus/mocks/mock_displina.dart';
+import 'package:gabarito_plus/mocks/mock_disciplina.dart';
 import 'package:gabarito_plus/models/alternativa.dart';
 import 'package:gabarito_plus/models/assunto.dart';
 import 'package:gabarito_plus/models/disciplina.dart';
@@ -112,5 +112,41 @@ class QuestoesService {
     );
 
     assunto.questoes.add(questao);
+  }
+
+  void editarQuestao({
+    required String disciplinaId,
+    required String assuntoId,
+    required Questao questao,
+  }) {
+    // 1. Localiza a disciplina correspondente
+    final disciplina = listaDisciplina.firstWhere(
+      (d) => d.id == disciplinaId,
+      orElse: () => throw Exception('Disciplina não encontrada.'),
+    );
+
+    // 2. Localiza o assunto dentro da disciplina
+    final assunto = disciplina.assuntos.firstWhere(
+      (a) => a.id == assuntoId,
+      orElse: () => throw Exception('Assunto não encontrado.'),
+    );
+
+    // 3. Procura a questão original na lista
+    final index = assunto.questoes.indexWhere((q) => q.id == questao.id);
+
+    if (index != -1) {
+      // Se encontrou no mesmo assunto, atualiza diretamente
+      assunto.questoes[index] = questao;
+    } else {
+      // Caso a disciplina/assunto tenham sido alterados durante a edição:
+      // Remove a questão de onde ela estava antes
+      for (var d in listaDisciplina) {
+        for (var a in d.assuntos) {
+          a.questoes.removeWhere((q) => q.id == questao.id);
+        }
+      }
+      // E adiciona no novo assunto selecionado
+      assunto.questoes.add(questao);
+    }
   }
 }
