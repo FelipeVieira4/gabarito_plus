@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gabarito_plus/mocks/mock_aluno.dart';
-import 'package:gabarito_plus/views/alunos/cadastro_aluno.dart'; // Ajuste o caminho da sua tela de cadastro
+import 'package:gabarito_plus/views/alunos/cadastro_aluno.dart'; // ajuste o caminho
 
 class ConsultaAluno extends StatefulWidget {
   const ConsultaAluno({super.key});
@@ -12,6 +12,8 @@ class ConsultaAluno extends StatefulWidget {
 class _ConsultaAlunoState extends State<ConsultaAluno> {
   @override
   Widget build(BuildContext context) {
+    final alunos = listaAlunos;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Consulta de Alunos'),
@@ -23,7 +25,8 @@ class _ConsultaAlunoState extends State<ConsultaAluno> {
               await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const CadastroAluno(title: 'Cadastro de Aluno'),
+                  builder: (context) =>
+                      const CadastroAluno(title: 'Cadastro de Aluno'),
                 ),
               );
               setState(() {});
@@ -33,79 +36,61 @@ class _ConsultaAlunoState extends State<ConsultaAluno> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: GridView.builder(
-          itemCount: listaAlunos.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 1,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 4.5,
-          ),
-          itemBuilder: (context, index) {
-            final aluno = listaAlunos[index]; // <-- aluno é criado aqui
+        child: alunos.isEmpty
+            ? const Center(
+                child: Text('Nenhum aluno encontrado.'),
+              )
+            : ListView.separated(
+                itemCount: alunos.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final aluno = alunos[index];
 
-            return Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 18,
-                      child: Text(aluno.nome[0]),
+                  return Card(
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            aluno.nome,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
+                      leading: CircleAvatar(
+                        radius: 18,
+                        child: Text(aluno.nome[0]),
+                      ),
+                      title: Text(
+                        aluno.nome,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      subtitle: Text(
+                        aluno.email,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.edit),
+                        tooltip: 'Editar Aluno',
+                        onPressed: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CadastroAluno(
+                                title: 'Editar Aluno',
+                                aluno: aluno,
+                              ),
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            aluno.email,
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 12,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                          );
+                          setState(() {});
+                        },
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.edit),
-                      tooltip: 'Editar Aluno',
-                      onPressed: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CadastroAluno(
-                              title: 'Editar Aluno',
-                              aluno: aluno,
-                            ),
-                          ),
-                        );
-                        setState(() {});
-                      },
-                    ),
-                  ],
-                ),
+                  );
+                },
               ),
-            );
-          },
-        ),
       ),
     );
   }

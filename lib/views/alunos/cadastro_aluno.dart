@@ -6,7 +6,7 @@ class CadastroAluno extends StatefulWidget {
   const CadastroAluno({super.key, required this.title, this.aluno});
 
   final String title;
-  final Aluno? aluno; // continua aceitando vir preenchido da consulta
+  final Aluno? aluno;
 
   @override
   State<CadastroAluno> createState() => _CadastroAlunoState();
@@ -18,7 +18,7 @@ class _CadastroAlunoState extends State<CadastroAluno> {
   final _nomeController = TextEditingController();
   final _emailController = TextEditingController();
 
-  Aluno? _alunoEncontrado; // null = ID em branco ou não encontrado ainda
+  Aluno? _alunoEncontrado;
 
   bool get _isEdicao => _alunoEncontrado != null;
 
@@ -39,7 +39,6 @@ class _CadastroAlunoState extends State<CadastroAluno> {
     super.dispose();
   }
 
-  // Busca o aluno pelo ID digitado e preenche o formulário
   void _carregarAluno(String id) {
     final encontrado = listaAlunos.where((a) => a.id == id).toList();
 
@@ -62,7 +61,6 @@ class _CadastroAlunoState extends State<CadastroAluno> {
     final idDigitado = _idController.text.trim();
 
     if (_isEdicao) {
-      // Edição: atualiza o aluno encontrado
       final index = listaAlunos.indexWhere((a) => a.id == _alunoEncontrado!.id);
       if (index != -1) {
         setState(() {
@@ -77,7 +75,6 @@ class _CadastroAlunoState extends State<CadastroAluno> {
         const SnackBar(content: Text('Aluno atualizado com sucesso!')),
       );
     } else {
-      // Cadastro novo: se o ID foi digitado e não existe, usa ele; senão gera um novo
       final novoId = idDigitado.isNotEmpty
           ? idDigitado
           : (listaAlunos.length + 1).toString();
@@ -90,7 +87,7 @@ class _CadastroAlunoState extends State<CadastroAluno> {
 
       setState(() {
         listaAlunos.add(novoAluno);
-        _alunoEncontrado = novoAluno; // agora "virou" edição, útil pra corrigir na hora
+        _alunoEncontrado = novoAluno;
         _idController.text = novoAluno.id;
       });
 
@@ -130,7 +127,6 @@ class _CadastroAlunoState extends State<CadastroAluno> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(_isEdicao ? 'Editar Aluno' : widget.title),
         actions: [
           if (_isEdicao)
@@ -141,75 +137,116 @@ class _CadastroAlunoState extends State<CadastroAluno> {
             ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextFormField(
-                controller: _idController,
-                decoration: InputDecoration(
-                  labelText: 'ID do Aluno',
-                  border: const OutlineInputBorder(),
-                  prefixIcon: const Icon(Icons.badge),
-                  helperText: _idController.text.trim().isEmpty
-                      ? 'Deixe em branco para novo cadastro'
-                      : (_isEdicao ? 'Aluno encontrado' : 'ID não encontrado — será criado ao salvar'),
-                  helperStyle: TextStyle(
-                    color: _isEdicao ? Colors.green : Colors.grey[600],
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          // Considera "desktop/tablet largo" a partir de 700px
+          final isWide = constraints.maxWidth >= 700;
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Center(
+              child: ConstrainedBox(
+                // Limita a largura do form em telas grandes
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      TextFormField(
+                        controller: _idController,
+                        decoration: InputDecoration(
+                          labelText: 'ID do Aluno',
+                          border: const OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.badge),
+                          helperText: _idController.text.trim().isEmpty
+                              ? 'Deixe em branco para novo cadastro'
+                              : (_isEdicao
+                                  ? 'Aluno encontrado'
+                                  : 'ID não encontrado — será criado ao salvar'),
+                          helperStyle: TextStyle(
+                            color: _isEdicao ? Colors.green : Colors.grey[600],
+                          ),
+                        ),
+                        onChanged: _carregarAluno,
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Em telas largas, Nome e E-mail ficam lado a lado
+                      isWide
+                          ? Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(child: _campoNome()),
+                                const SizedBox(width: 16),
+                                Expanded(child: _campoEmail()),
+                              ],
+                            )
+                          : Column(
+                              children: [
+                                _campoNome(),
+                                const SizedBox(height: 16),
+                                _campoEmail(),
+                              ],
+                            ),
+
+                      const SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        onPressed: _salvarAluno,
+                        icon: const Icon(Icons.save),
+                        label: Text(
+                          _isEdicao ? 'Salvar Alterações' : 'Cadastrar Aluno',
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                onChanged: _carregarAluno, // busca a cada digitação
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _nomeController,
-                decoration: const InputDecoration(
-                  labelText: 'Nome do Aluno',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Informe o nome do aluno';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: 'E-mail',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Informe o e-mail';
-                  }
-                  if (!value.contains('@')) {
-                    return 'Informe um e-mail válido';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: _salvarAluno,
-                icon: const Icon(Icons.save),
-                label: Text(_isEdicao ? 'Salvar Alterações' : 'Cadastrar Aluno'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-              ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
+    );
+  }
+
+  Widget _campoNome() {
+    return TextFormField(
+      controller: _nomeController,
+      decoration: const InputDecoration(
+        labelText: 'Nome do Aluno',
+        border: OutlineInputBorder(),
+        prefixIcon: Icon(Icons.person),
+      ),
+      validator: (value) {
+        if (value == null || value.trim().isEmpty) {
+          return 'Informe o nome do aluno';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _campoEmail() {
+    return TextFormField(
+      controller: _emailController,
+      keyboardType: TextInputType.emailAddress,
+      decoration: const InputDecoration(
+        labelText: 'E-mail',
+        border: OutlineInputBorder(),
+        prefixIcon: Icon(Icons.email),
+      ),
+      validator: (value) {
+        if (value == null || value.trim().isEmpty) {
+          return 'Informe o e-mail';
+        }
+        if (!value.contains('@')) {
+          return 'Informe um e-mail válido';
+        }
+        return null;
+      },
     );
   }
 }
