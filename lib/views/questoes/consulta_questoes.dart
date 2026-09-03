@@ -94,137 +94,158 @@ class _ListaQuestoesViewState extends State<ListaQuestoesView> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Banco de Questões'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: TextField(
-              controller: _buscaController,
-              onChanged: (_) => _aplicarFiltros(),
-              decoration: InputDecoration(
-                labelText: 'Buscar no enunciado...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth >= 700;
+
+          return Center(
+            child: ConstrainedBox(
+              // Trava a largura no desktop pra não esticar filtros e cards
+              constraints: const BoxConstraints(maxWidth: 900),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    child: TextField(
+                      controller: _buscaController,
+                      onChanged: (_) => _aplicarFiltros(),
+                      decoration: InputDecoration(
+                        labelText: 'Buscar no enunciado...',
+                        prefixIcon: const Icon(Icons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: DropdownButtonFormField<Disciplina>(
+                            value: _disciplinaFiltro,
+                            isExpanded: true,
+                            decoration: const InputDecoration(
+                              labelText: 'Disciplina',
+                              border: OutlineInputBorder(),
+                              isDense: true,
+                            ),
+                            hint: const Text('Todas'),
+                            items: _disciplinas
+                                .map((disciplina) => DropdownMenuItem(
+                                      value: disciplina,
+                                      child: Text(disciplina.descricao),
+                                    ))
+                                .toList(),
+                            onChanged: _selecionarDisciplinaFiltro,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: DropdownButtonFormField<Assunto>(
+                            value: _assuntoFiltro,
+                            isExpanded: true,
+                            decoration: const InputDecoration(
+                              labelText: 'Assunto',
+                              border: OutlineInputBorder(),
+                              isDense: true,
+                            ),
+                            hint: const Text('Todos'),
+                            items: assuntosDoFiltro
+                                .map((assunto) => DropdownMenuItem(
+                                      value: assunto,
+                                      child: Text(assunto.nome),
+                                    ))
+                                .toList(),
+                            onChanged: _disciplinaFiltro == null
+                                ? null
+                                : _selecionarAssuntoFiltro,
+                          ),
+                        ),
+                        if (_disciplinaFiltro != null || _assuntoFiltro != null)
+                          IconButton(
+                            tooltip: 'Limpar filtros',
+                            icon: const Icon(Icons.filter_alt_off),
+                            onPressed: _limparFiltros,
+                          ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: _questoesFiltradas.isEmpty
+                        ? const Center(child: Text('Nenhuma questão encontrada.'))
+                        : ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            itemCount: _questoesFiltradas.length,
+                            itemBuilder: (context, index) {
+                              final questao = _questoesFiltradas[index];
+                              final disciplina =
+                                  _service.obterDisciplinaDaQuestao(questao);
+                              final assunto =
+                                  _service.obterAssuntoDaQuestao(questao);
+
+                              return Card(
+                                elevation: 2,
+                                margin: const EdgeInsets.only(bottom: 12.0),
+                                child: ListTile(
+                                  // Um pouco mais de respiro nas laterais em telas largas
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: isWide ? 20 : 16,
+                                    vertical: 8,
+                                  ),
+                                  title: Text(
+                                    questao.enunciado,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  subtitle: Text(
+                                    '${disciplina?.descricao ?? '-'} - ${assunto?.nome ?? '-'}',
+                                  ),
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(Icons.edit,
+                                            color: Colors.blue),
+                                        tooltip: 'Editar questão',
+                                        onPressed: () {
+                                          _abrirEdicaoQuestao(
+                                              questao, disciplina, assunto);
+                                        },
+                                      ),
+                                      const Icon(Icons.arrow_forward_ios,
+                                          size: 16.0),
+                                    ],
+                                  ),
+                                  onTap: () {
+                                    if (disciplina == null || assunto == null) {
+                                      return;
+                                    }
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => DetalhesQuestaoView(
+                                          questao: questao,
+                                          disciplina: disciplina,
+                                          assunto: assunto,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<Disciplina>(
-                    value: _disciplinaFiltro,
-                    isExpanded: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Disciplina',
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                    ),
-                    hint: const Text('Todas'),
-                    items: _disciplinas
-                        .map((disciplina) => DropdownMenuItem(
-                              value: disciplina,
-                              child: Text(disciplina.descricao),
-                            ))
-                        .toList(),
-                    onChanged: _selecionarDisciplinaFiltro,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: DropdownButtonFormField<Assunto>(
-                    value: _assuntoFiltro,
-                    isExpanded: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Assunto',
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                    ),
-                    hint: const Text('Todos'),
-                    items: assuntosDoFiltro
-                        .map((assunto) => DropdownMenuItem(
-                              value: assunto,
-                              child: Text(assunto.nome),
-                            ))
-                        .toList(),
-                    onChanged: _disciplinaFiltro == null
-                        ? null
-                        : _selecionarAssuntoFiltro,
-                  ),
-                ),
-                if (_disciplinaFiltro != null || _assuntoFiltro != null)
-                  IconButton(
-                    tooltip: 'Limpar filtros',
-                    icon: const Icon(Icons.filter_alt_off),
-                    onPressed: _limparFiltros,
-                  ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: _questoesFiltradas.isEmpty
-                ? const Center(child: Text('Nenhuma questão encontrada.'))
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    itemCount: _questoesFiltradas.length,
-                    itemBuilder: (context, index) {
-                      final questao = _questoesFiltradas[index];
-                      final disciplina =
-                          _service.obterDisciplinaDaQuestao(questao);
-                      final assunto = _service.obterAssuntoDaQuestao(questao);
-
-                      return Card(
-                        elevation: 2,
-                        margin: const EdgeInsets.only(bottom: 12.0),
-                        child: ListTile(
-                          title: Text(
-                            questao.enunciado,
-                            style:
-                                const TextStyle(fontWeight: FontWeight.bold),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          subtitle: Text(
-                            '${disciplina?.descricao ?? '-'} - ${assunto?.nome ?? '-'}',
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit, color: Colors.blue),
-                                tooltip: 'Editar questão',
-                                onPressed: () {
-                                  _abrirEdicaoQuestao(
-                                      questao, disciplina, assunto);
-                                },
-                              ),
-                              const Icon(Icons.arrow_forward_ios, size: 16.0),
-                            ],
-                          ),
-                          onTap: () {
-                            if (disciplina == null || assunto == null) return;
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => DetalhesQuestaoView(
-                                  questao: questao,
-                                  disciplina: disciplina,
-                                  assunto: assunto,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      );
-                    },
-                  ),
-          ),
-        ],
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
