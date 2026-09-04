@@ -232,7 +232,7 @@ class _CadastroTurmaState extends State<CadastroTurma> {
                                 shrinkWrap: true,
                                 physics: const NeverScrollableScrollPhysics(),
                                 itemCount: listaAlunos.length,
-                                separatorBuilder: (_, __) =>
+                                separatorBuilder: (_, _) =>
                                     const Divider(height: 1),
                                 itemBuilder: (context, index) {
                                   final aluno = listaAlunos[index];
