@@ -27,85 +27,107 @@ class DashboardAluno extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionTitle(context, 'Alunos', Icons.person),
-            const SizedBox(height: 12),
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              children: [
-                _buildMenuCard(
-                  context,
-                  'Consulta Aluno',
-                  Icons.search,
-                  Colors.blue,
-                  () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const ConsultaAluno()),
-                  ),
-                ),
-                _buildMenuCard(
-                  context,
-                  'Cadastro de Aluno',
-                  Icons.create,
-                  Colors.orange,
-                  () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const CadastroAluno(title: "Cadastro de Aluno")),
-                  ),
-                )
-              ],
-            ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final largura = constraints.maxWidth;
+          final isWide = largura >= 700;
 
-            const SizedBox(height: 28),
-            _DashedDivider(),
-            const SizedBox(height: 28),
+          // No desktop os cards ficam mais "largos" (menos quadrados);
+          // no mobile continuam próximos de 1:1 como no original
+          final aspectRatio = isWide ? 1.6 : 1.0;
 
-            _buildSectionTitle(context, 'Turmas', Icons.class_),
-            const SizedBox(height: 12),
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              children: [
-                _buildMenuCard(
-                  context,
-                  'Consulta de Turma',
-                  Icons.search,
-                  Colors.blue,
-                  () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const ConsultaTurma()),
-                  ),
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Center(
+              child: ConstrainedBox(
+                // Trava a largura no desktop pra evitar cards gigantes
+                constraints: const BoxConstraints(maxWidth: 800),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionTitle(context, 'Alunos', Icons.person),
+                    const SizedBox(height: 12),
+                    GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: aspectRatio,
+                      children: [
+                        _buildMenuCard(
+                          context,
+                          'Consulta Aluno',
+                          Icons.search,
+                          Colors.blue,
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const ConsultaAluno()),
+                          ),
+                        ),
+                        _buildMenuCard(
+                          context,
+                          'Cadastro de Aluno',
+                          Icons.create,
+                          Colors.orange,
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const CadastroAluno(
+                                    title: "Cadastro de Aluno")),
+                          ),
+                        )
+                      ],
+                    ),
+                    const SizedBox(height: 28),
+                    _DashedDivider(),
+                    const SizedBox(height: 28),
+                    _buildSectionTitle(context, 'Turmas', Icons.class_),
+                    const SizedBox(height: 12),
+                    GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: aspectRatio,
+                      children: [
+                        _buildMenuCard(
+                          context,
+                          'Consulta de Turma',
+                          Icons.search,
+                          Colors.blue,
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const ConsultaTurma()),
+                          ),
+                        ),
+                        _buildMenuCard(
+                          context,
+                          'Cadastro de Turma',
+                          Icons.create,
+                          Colors.orange,
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const CadastroTurma(
+                                    title: "Cadastro de Turma")),
+                          ),
+                        )
+                      ],
+                    ),
+                  ],
                 ),
-                _buildMenuCard(
-                  context,
-                  'Cadastro de Turma',
-                  Icons.create,
-                  Colors.orange,
-                  () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const CadastroTurma(title: "Cadastro de Turma")),
-                  ),
-                )
-              ],
+              ),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  // Título de cada seção, com ícone + texto
   Widget _buildSectionTitle(BuildContext context, String title, IconData icon) {
     return Row(
       children: [

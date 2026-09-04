@@ -20,7 +20,7 @@ class _CadastroTurmaState extends State<CadastroTurma> {
   final _nomeTurmaController = TextEditingController();
 
   final Set<Aluno> _alunosSelecionados = {};
-  bool _situacaoTurma = true; // sem tristate: turma só é ativa ou inativa
+  bool _situacaoTurma = true;
 
   Turma? _turmaEncontrada;
 
@@ -42,7 +42,6 @@ class _CadastroTurmaState extends State<CadastroTurma> {
     super.dispose();
   }
 
-  // Busca a turma pelo ID digitado e preenche o formulário
   void _carregarTurma(String id) {
     final encontrada = listaTurma.where((t) => t.id == id).toList();
 
@@ -78,7 +77,6 @@ class _CadastroTurmaState extends State<CadastroTurma> {
     final idDigitado = _idController.text.trim();
 
     if (_isEdicao) {
-      // Edição: atualiza a turma encontrada
       final index = listaTurma.indexWhere((t) => t.id == _turmaEncontrada!.id);
       if (index != -1) {
         setState(() {
@@ -94,7 +92,6 @@ class _CadastroTurmaState extends State<CadastroTurma> {
         const SnackBar(content: Text('Turma atualizada com sucesso!')),
       );
     } else {
-      // Cadastro novo: usa o ID digitado se veio preenchido, senão gera um
       final novoId = idDigitado.isNotEmpty
           ? idDigitado
           : (listaTurma.length + 1).toString();
@@ -108,7 +105,7 @@ class _CadastroTurmaState extends State<CadastroTurma> {
 
       setState(() {
         listaTurma.add(novaTurma);
-        _turmaEncontrada = novaTurma; // vira edição, útil pra corrigir na hora
+        _turmaEncontrada = novaTurma;
         _idController.text = novaTurma.id;
       });
 
@@ -148,7 +145,6 @@ class _CadastroTurmaState extends State<CadastroTurma> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(_isEdicao ? 'Editar Turma' : widget.title),
         actions: [
           if (_isEdicao)
@@ -159,134 +155,174 @@ class _CadastroTurmaState extends State<CadastroTurma> {
             ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextFormField(
-                controller: _idController,
-                decoration: InputDecoration(
-                  labelText: 'ID da Turma',
-                  border: const OutlineInputBorder(),
-                  prefixIcon: const Icon(Icons.badge),
-                  helperText: _idController.text.trim().isEmpty
-                      ? 'Deixe em branco para nova turma'
-                      : (_isEdicao ? 'Turma encontrada' : 'ID não encontrado — será criado ao salvar'),
-                  helperStyle: TextStyle(
-                    color: _isEdicao ? Colors.green : Colors.grey[600],
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth >= 700;
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Center(
+              child: ConstrainedBox(
+                // Um pouco mais largo que o de aluno, pra acomodar a lista de alunos
+                constraints: const BoxConstraints(maxWidth: 700),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // ID e Nome lado a lado no desktop, empilhados no mobile
+                      isWide
+                          ? Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(flex: 1, child: _campoId()),
+                                const SizedBox(width: 16),
+                                Expanded(flex: 2, child: _campoNomeTurma()),
+                              ],
+                            )
+                          : Column(
+                              children: [
+                                _campoId(),
+                                const SizedBox(height: 16),
+                                _campoNomeTurma(),
+                              ],
+                            ),
+                      const SizedBox(height: 16),
+
+                      Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        child: CheckboxListTile(
+                          value: _situacaoTurma,
+                          title: const Text('Turma ativa'),
+                          subtitle: Text(_situacaoTurma
+                              ? 'A turma está em andamento'
+                              : 'A turma está inativa/encerrada'),
+                          onChanged: (bool? value) {
+                            setState(() {
+                              _situacaoTurma = value ?? true;
+                            });
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Selecione os alunos',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        child: listaAlunos.isEmpty
+                            ? const Padding(
+                                padding: EdgeInsets.all(16.0),
+                                child: Text('Nenhum aluno cadastrado ainda.'),
+                              )
+                            : ListView.separated(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: listaAlunos.length,
+                                separatorBuilder: (_, __) =>
+                                    const Divider(height: 1),
+                                itemBuilder: (context, index) {
+                                  final aluno = listaAlunos[index];
+                                  final selecionado = _alunosSelecionados
+                                      .any((a) => a.id == aluno.id);
+
+                                  return CheckboxListTile(
+                                    value: selecionado,
+                                    title: Text(aluno.nome),
+                                    subtitle: Text(aluno.email),
+                                    secondary: CircleAvatar(
+                                      radius: 16,
+                                      child: Text(aluno.nome[0]),
+                                    ),
+                                    onChanged: (checked) {
+                                      setState(() {
+                                        if (checked == true) {
+                                          _alunosSelecionados.add(aluno);
+                                        } else {
+                                          _alunosSelecionados.removeWhere(
+                                              (a) => a.id == aluno.id);
+                                        }
+                                      });
+                                    },
+                                  );
+                                },
+                              ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${_alunosSelecionados.length} aluno(s) selecionado(s)',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      ),
+                      const SizedBox(height: 24),
+
+                      ElevatedButton.icon(
+                        onPressed: _salvarTurma,
+                        icon: const Icon(Icons.save),
+                        label: Text(
+                          _isEdicao ? 'Salvar Alterações' : 'Cadastrar Turma',
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                onChanged: _carregarTurma,
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _nomeTurmaController,
-                decoration: const InputDecoration(
-                  labelText: 'Nome da Turma',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.class_),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Informe o nome da turma';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              // Situação da turma: ativa/inativa, sem estado indeterminado
-              Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  side: BorderSide(color: Colors.grey.shade300),
-                ),
-                child: CheckboxListTile(
-                  value: _situacaoTurma,
-                  title: const Text('Turma ativa'),
-                  subtitle: Text(_situacaoTurma
-                      ? 'A turma está em andamento'
-                      : 'A turma está inativa/encerrada'),
-                  onChanged: (bool? value) {
-                    setState(() {
-                      _situacaoTurma = value ?? true;
-                    });
-                  },
-                ),
-              ),
-              const SizedBox(height: 24),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Selecione os alunos',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  side: BorderSide(color: Colors.grey.shade300),
-                ),
-                child: listaAlunos.isEmpty
-                    ? const Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Text('Nenhum aluno cadastrado ainda.'),
-                      )
-                    : ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: listaAlunos.length,
-                        separatorBuilder: (_, _) => const Divider(height: 1),
-                        itemBuilder: (context, index) {
-                          final aluno = listaAlunos[index];
-                          // Compara por ID, não por instância, pra funcionar
-                          // corretamente quando os alunos vierem recarregados da turma
-                          final selecionado =
-                              _alunosSelecionados.any((a) => a.id == aluno.id);
+            ),
+          );
+        },
+      ),
+    );
+  }
 
-                          return CheckboxListTile(
-                            value: selecionado,
-                            title: Text(aluno.nome),
-                            subtitle: Text(aluno.email),
-                            secondary: CircleAvatar(
-                              radius: 16,
-                              child: Text(aluno.nome[0]),
-                            ),
-                            onChanged: (checked) {
-                              setState(() {
-                                if (checked == true) {
-                                  _alunosSelecionados.add(aluno);
-                                } else {
-                                  _alunosSelecionados
-                                      .removeWhere((a) => a.id == aluno.id);
-                                }
-                              });
-                            },
-                          );
-                        },
-                      ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '${_alunosSelecionados.length} aluno(s) selecionado(s)',
-                style: TextStyle(color: Colors.grey[600], fontSize: 12),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: _salvarTurma,
-                icon: const Icon(Icons.save),
-                label: Text(_isEdicao ? 'Salvar Alterações' : 'Cadastrar Turma'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-              ),
-            ],
-          ),
+  Widget _campoId() {
+    return TextFormField(
+      controller: _idController,
+      decoration: InputDecoration(
+        labelText: 'ID da Turma',
+        border: const OutlineInputBorder(),
+        prefixIcon: const Icon(Icons.badge),
+        helperText: _idController.text.trim().isEmpty
+            ? 'Deixe em branco para nova turma'
+            : (_isEdicao
+                ? 'Turma encontrada'
+                : 'ID não encontrado — será criado ao salvar'),
+        helperStyle: TextStyle(
+          color: _isEdicao ? Colors.green : Colors.grey[600],
         ),
       ),
+      onChanged: _carregarTurma,
+    );
+  }
+
+  Widget _campoNomeTurma() {
+    return TextFormField(
+      controller: _nomeTurmaController,
+      decoration: const InputDecoration(
+        labelText: 'Nome da Turma',
+        border: OutlineInputBorder(),
+        prefixIcon: Icon(Icons.class_),
+      ),
+      validator: (value) {
+        if (value == null || value.trim().isEmpty) {
+          return 'Informe o nome da turma';
+        }
+        return null;
+      },
     );
   }
 }
