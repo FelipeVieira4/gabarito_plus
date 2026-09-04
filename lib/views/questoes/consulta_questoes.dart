@@ -125,7 +125,7 @@ class _ListaQuestoesViewState extends State<ListaQuestoesView> {
                       children: [
                         Expanded(
                           child: DropdownButtonFormField<Disciplina>(
-                            value: _disciplinaFiltro,
+                            initialValue: _disciplinaFiltro,
                             isExpanded: true,
                             decoration: const InputDecoration(
                               labelText: 'Disciplina',
@@ -145,7 +145,7 @@ class _ListaQuestoesViewState extends State<ListaQuestoesView> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: DropdownButtonFormField<Assunto>(
-                            value: _assuntoFiltro,
+                            initialValue: _assuntoFiltro,
                             isExpanded: true,
                             decoration: const InputDecoration(
                               labelText: 'Assunto',

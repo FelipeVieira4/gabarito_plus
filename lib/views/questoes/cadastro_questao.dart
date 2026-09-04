@@ -222,7 +222,7 @@ class _CadastroQuestaoViewState extends State<CadastroQuestaoView> {
 
   Widget _campoDisciplina() {
     return DropdownButtonFormField<Disciplina>(
-      value: _disciplinaSelecionada,
+      initialValue: _disciplinaSelecionada,
       decoration: const InputDecoration(
         labelText: 'Disciplina',
         border: OutlineInputBorder(),
@@ -246,7 +246,7 @@ class _CadastroQuestaoViewState extends State<CadastroQuestaoView> {
 
   Widget _campoAssunto(List<Assunto> assuntosDaDisciplina) {
     return DropdownButtonFormField<Assunto>(
-      value: _assuntoSelecionado,
+      initialValue: _assuntoSelecionado,
       decoration: const InputDecoration(
         labelText: 'Assunto',
         border: OutlineInputBorder(),
