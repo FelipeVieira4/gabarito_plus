@@ -4,37 +4,50 @@ final Aluno alunoMock = Aluno(
   id: '1',
   nome: 'José Perreira',
   email: 'joselito@email.com',
+  isAtivo: true,
 );
 
 
 final List<Aluno> listaAlunos = <Aluno>[
   Aluno(id: '1',
     nome: 'José Perreira',
-    email: 'joselito@email.com'
+    email: 'joselito@email.com',
+    isAtivo: true,
   ),
   Aluno(
     id: '2',
     nome: 'Ana Maria',
-    email: 'Ana63653@email.com'
+    email: 'Ana63653@email.com',
+    isAtivo: true,
   ),
   Aluno(
     id: '3',
     nome: 'Eduardo Gonçalves',
-    email: 'dudu459476@email.com'
+    email: 'dudu459476@email.com',
+    isAtivo: true,
   ),
   Aluno(
     id: '4',
     nome: 'Matheus Oliveira',
-    email: 'matheusOliv23445@email.com'
+    email: 'matheusOliv23445@email.com',
+    isAtivo: true,
   ),
   Aluno(
     id: '5',
     nome: 'Ricardo Diaz',
-    email: 'racardoTESTE123@email.com'
+    email: 'racardoTESTE123@email.com',
+    isAtivo: true,
   ),
   Aluno(
     id: '6',
     nome: 'Miguel de Souza',
-    email: 'miguelSouza546@yahoo.com'
+    email: 'miguelSouza546@yahoo.com',
+    isAtivo: true,
+  ),
+  Aluno(
+    id: '7',
+    nome: 'TESTE INATIVO',
+    email: 'inativAluno@yahoo.com',
+    isAtivo: false,
   )
 ];
