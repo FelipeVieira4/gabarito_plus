@@ -57,20 +57,17 @@ class _ConsultaAlunoState extends State<ConsultaAluno> {
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 8),
-
-            Row(
-              children: [
-                FilterChip(
-                  label: const Text('Apenas Ativos'),
-                  selected: _apenasAtivos,
-                  onSelected: (bool selected) {
-                    setState(() {
-                      _apenasAtivos = selected;
-                    });
-                  },
-                ),
-              ],
+            CheckboxListTile(
+                value: _apenasAtivos,
+                title: const Text('Apenas Ativos'),
+                controlAffinity: ListTileControlAffinity.leading,
+                onChanged: (checked) {
+                  setState(() {
+                    _apenasAtivos = checked ?? false;
+                  });
+                },
             ),
+
             const SizedBox(height: 12),
 
             // Lista de Alunos
