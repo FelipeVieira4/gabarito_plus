@@ -45,9 +45,9 @@ final List<Aluno> listaAlunos = <Aluno>[
     isAtivo: true,
   ),
   Aluno(
-    id: '6',
-    nome: 'Miguel de Souza',
-    email: 'miguelSouza546@yahoo.com',
+    id: '7',
+    nome: 'TESTE INATIVO',
+    email: 'inativAluno@yahoo.com',
     isAtivo: false,
   )
 ];
