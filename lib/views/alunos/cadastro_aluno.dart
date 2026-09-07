@@ -18,6 +18,7 @@ class _CadastroAlunoState extends State<CadastroAluno> {
   final _nomeController = TextEditingController();
   final _emailController = TextEditingController();
 
+  bool _isAtivo = true; // Novo estado para o campo isAtivo
   Aluno? _alunoEncontrado;
 
   bool get _isEdicao => _alunoEncontrado != null;
@@ -47,10 +48,12 @@ class _CadastroAlunoState extends State<CadastroAluno> {
         _alunoEncontrado = encontrado.first;
         _nomeController.text = _alunoEncontrado!.nome;
         _emailController.text = _alunoEncontrado!.email;
+        _isAtivo = _alunoEncontrado!.isAtivo; // Carrega o status do aluno
       } else {
         _alunoEncontrado = null;
         _nomeController.clear();
         _emailController.clear();
+        _isAtivo = true;
       }
     });
   }
@@ -68,6 +71,7 @@ class _CadastroAlunoState extends State<CadastroAluno> {
             id: _alunoEncontrado!.id,
             nome: _nomeController.text.trim(),
             email: _emailController.text.trim(),
+            isAtivo: _isAtivo,
           );
         });
       }
@@ -83,6 +87,7 @@ class _CadastroAlunoState extends State<CadastroAluno> {
         id: novoId,
         nome: _nomeController.text.trim(),
         email: _emailController.text.trim(),
+        isAtivo: _isAtivo,
       );
 
       setState(() {
@@ -139,14 +144,12 @@ class _CadastroAlunoState extends State<CadastroAluno> {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          // Considera "desktop/tablet largo" a partir de 700px
           final isWide = constraints.maxWidth >= 700;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
             child: Center(
               child: ConstrainedBox(
-                // Limita a largura do form em telas grandes
                 constraints: const BoxConstraints(maxWidth: 600),
                 child: Form(
                   key: _formKey,
@@ -172,7 +175,6 @@ class _CadastroAlunoState extends State<CadastroAluno> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Em telas largas, Nome e E-mail ficam lado a lado
                       isWide
                           ? Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -189,6 +191,28 @@ class _CadastroAlunoState extends State<CadastroAluno> {
                                 _campoEmail(),
                               ],
                             ),
+
+                      const SizedBox(height: 16),
+
+                      // Campo de Status Ativo/Inativo
+                      SwitchListTile(
+                        title: const Text('Aluno Ativo'),
+                        subtitle: Text(
+                          _isAtivo
+                              ? 'Disponível para atribuição em turmas e provas'
+                              : 'Inativo (não aparecerá em novas turmas)',
+                        ),
+                        value: _isAtivo,
+                        onChanged: (bool value) {
+                          setState(() {
+                            _isAtivo = value;
+                          });
+                        },
+                        secondary: Icon(
+                          _isAtivo ? Icons.check_circle : Icons.cancel,
+                          color: _isAtivo ? Colors.green : Colors.red,
+                        ),
+                      ),
 
                       const SizedBox(height: 24),
                       ElevatedButton.icon(
