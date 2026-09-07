@@ -31,23 +31,7 @@ class _ConsultaAlunoState extends State<ConsultaAluno> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Consulta de Alunos'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person_add),
-            tooltip: 'Cadastrar Aluno',
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      const CadastroAluno(title: 'Cadastro de Aluno'),
-                ),
-              );
-              setState(() {});
-            },
-          ),
-        ],
+        title: const Text('Consulta de Alunos')
       ),
       body: Padding(
         padding: const EdgeInsets.all(12.0),
@@ -180,6 +164,17 @@ class _ConsultaAlunoState extends State<ConsultaAluno> {
             ),
           ],
         ),
+      ),
+    floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          Navigator.push<bool>(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const CadastroAluno(title: "Cadastro de Alunos"),
+            ),
+          );
+        },
+        child: const Icon(Icons.person_add),
       ),
     );
   }

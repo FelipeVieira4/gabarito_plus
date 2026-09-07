@@ -14,7 +14,7 @@ class DashboardAluno extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dashboard'),
+        title: const Text('Turmas e Alunos'),
         actions: [
           IconButton(
             icon: const Icon(Icons.account_circle),
