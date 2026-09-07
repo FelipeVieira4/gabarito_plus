@@ -30,22 +30,6 @@ class _ConsultaTurmaState extends State<ConsultaTurma> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Consulta de Turmas'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add_business),
-            tooltip: 'Cadastrar Turma',
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      const CadastroTurma(title: 'Cadastro de Turma'),
-                ),
-              );
-              setState(() {});
-            },
-          ),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -140,6 +124,17 @@ class _ConsultaTurmaState extends State<ConsultaTurma> {
             ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          Navigator.push<bool>(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const CadastroTurma(title: "Cadastro de Turma"),
+            ),
+          );
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }
