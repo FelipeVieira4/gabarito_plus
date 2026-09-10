@@ -37,6 +37,108 @@ class _ConsultaDisciplinasViewState extends State<ConsultaDisciplinasView> {
     }).toList();
   }
 
+  void _exibirOpcoesCadastro() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (modalContext) {
+        return SafeArea(
+          child: Padding(
+            padding:
+                const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const Text(
+                  'O que você deseja cadastrar?',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor:
+                        Theme.of(context).colorScheme.primaryContainer,
+                    child: Icon(
+                      Icons.school,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  title: const Text(
+                    'Criar Disciplina',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle:
+                      const Text('Cadastre uma nova disciplina no sistema'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.pop(modalContext);
+                    _exibirModalNovaDisciplina();
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: Colors.purple.shade100,
+                    child: const Icon(
+                      Icons.topic,
+                      color: Colors.purple,
+                    ),
+                  ),
+                  title: const Text(
+                    'Criar Assunto',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle:
+                      const Text('Adicione um novo assunto a uma disciplina'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.pop(modalContext);
+                    _exibirModalNovoAssunto();
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _exibirModalNovaDisciplina() async {
+    final disciplinaIdCriada = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (modalContext) => ModalCadastroDisciplina(
+        onSalvo: () {},
+      ),
+    );
+
+    if (disciplinaIdCriada != null) {
+      setState(() {
+        _disciplinaExpandidaId = disciplinaIdCriada;
+      });
+    } else {
+      setState(() {});
+    }
+  }
+
   Future<void> _exibirModalNovoAssunto() async {
     final disciplinaIdAtualizada = await showModalBottomSheet<String>(
       context: context,
@@ -164,9 +266,142 @@ class _ConsultaDisciplinasViewState extends State<ConsultaDisciplinasView> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        tooltip: 'Novo Assunto',
-        onPressed: _exibirModalNovoAssunto,
+        tooltip: 'Adicionar',
+        onPressed: _exibirOpcoesCadastro,
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+class ModalCadastroDisciplina extends StatefulWidget {
+  final VoidCallback? onSalvo;
+
+  const ModalCadastroDisciplina({super.key, this.onSalvo});
+
+  @override
+  State<ModalCadastroDisciplina> createState() =>
+      _ModalCadastroDisciplinaState();
+}
+
+class _ModalCadastroDisciplinaState extends State<ModalCadastroDisciplina> {
+  final _formKey = GlobalKey<FormState>();
+  final _nomeController = TextEditingController();
+
+  @override
+  void dispose() {
+    _nomeController.dispose();
+    super.dispose();
+  }
+
+  void _salvar() {
+    if (_formKey.currentState!.validate()) {
+      final nomeDisciplina = _nomeController.text.trim();
+
+      // Verifica se a disciplina já existe no mock
+      final jaExiste = listaDisciplina.any(
+        (d) => d.descricao.toLowerCase() == nomeDisciplina.toLowerCase(),
+      );
+
+      if (jaExiste) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Esta disciplina já está cadastrada!'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      final novaDisciplina = Disciplina(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        descricao: nomeDisciplina,
+        assuntos: [],
+      );
+
+      listaDisciplina.add(novaDisciplina);
+
+      // Também sincroniza com usuarioMock
+      if (!usuarioMock.disciplinas.contains(nomeDisciplina)) {
+        usuarioMock.disciplinas.add(nomeDisciplina);
+      }
+
+      if (widget.onSalvo != null) {
+        widget.onSalvo!();
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Disciplina cadastrada com sucesso!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      Navigator.pop(context, novaDisciplina.id);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: SingleChildScrollView(
+        child: Container(
+          padding: const EdgeInsets.all(24.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Cadastrar Nova Disciplina',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                TextFormField(
+                  controller: _nomeController,
+                  decoration: const InputDecoration(
+                    labelText: 'Nome da Disciplina',
+                    prefixIcon: Icon(Icons.school),
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Informe o nome da disciplina';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: _salvar,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: const Text(
+                    'Salvar',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
