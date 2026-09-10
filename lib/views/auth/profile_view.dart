@@ -27,7 +27,7 @@ class ProfileView extends StatelessWidget {
               const SizedBox(height: 16),
               const Align(
                 alignment: Alignment.centerLeft,
-                child: Text('Matérias', style: TextStyle(fontSize: 14, color: Colors.grey)),
+                child: Text('Disciplinas', style: TextStyle(fontSize: 14, color: Colors.grey)),
               ),
               const SizedBox(height: 8),
               Align(
@@ -35,8 +35,8 @@ class ProfileView extends StatelessWidget {
                 child: Wrap(
                   spacing: 8,
                   runSpacing: 4,
-                  children: usuarioMock.materias.map((materia) => Chip(
-                    label: Text(materia),
+                  children: usuarioMock.disciplinas.map((disciplina) => Chip(
+                    label: Text(disciplina),
                     backgroundColor: Colors.blue[50],
                   )).toList(),
                 ),
