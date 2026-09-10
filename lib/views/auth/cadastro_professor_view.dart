@@ -13,14 +13,12 @@ class _CadastroProfessorViewState extends State<CadastroProfessorView> {
   final _nomeController = TextEditingController();
   final _emailController = TextEditingController();
   final _senhaController = TextEditingController();
-  final _disciplinasController = TextEditingController();
 
   @override
   void dispose() {
     _nomeController.dispose();
     _emailController.dispose();
     _senhaController.dispose();
-    _disciplinasController.dispose();
     super.dispose();
   }
 
@@ -94,22 +92,6 @@ class _CadastroProfessorViewState extends State<CadastroProfessorView> {
                 validator: (value) {
                   if (value == null || value.length < 6) {
                     return 'A senha deve ter no mínimo 6 caracteres';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _disciplinasController,
-                decoration: const InputDecoration(
-                  labelText: 'Disciplinas',
-                  hintText: 'Ex: Engenharia de Software, Algoritmos',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.book),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Informe as disciplinas';
                   }
                   return null;
                 },

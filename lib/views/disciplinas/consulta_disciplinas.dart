@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:gabarito_plus/mocks/mock_disciplina.dart';
-import 'package:gabarito_plus/mocks/mock_professor.dart';
 import 'package:gabarito_plus/models/assunto.dart';
 import 'package:gabarito_plus/models/disciplina.dart';
 import 'package:gabarito_plus/services/questoes_service.dart';
@@ -321,11 +320,6 @@ class _ModalCadastroDisciplinaState extends State<ModalCadastroDisciplina> {
 
       listaDisciplina.add(novaDisciplina);
 
-      // Também sincroniza com usuarioMock
-      if (!usuarioMock.disciplinas.contains(nomeDisciplina)) {
-        usuarioMock.disciplinas.add(nomeDisciplina);
-      }
-
       if (widget.onSalvo != null) {
         widget.onSalvo!();
       }
@@ -422,10 +416,7 @@ class _ModalCadastroAssuntoState extends State<ModalCadastroAssunto> {
   String? _disciplinaSelecionada;
 
   List<String> get _opcoesDisciplinas {
-    final doProfessor = usuarioMock.disciplinas;
-    final doMock = listaDisciplina.map((d) => d.descricao);
-    final unificadas = <String>{...doProfessor, ...doMock};
-    return unificadas.toList();
+    return listaDisciplina.map((d) => d.descricao).toSet().toList();
   }
 
   @override
