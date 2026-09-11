@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../dashboard/dashboard_view.dart';
+import 'cadastro_professor_view.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -63,6 +64,18 @@ class _LoginViewState extends State<LoginView> {
                   ),
                   child: const Text('Entrar', style: TextStyle(fontSize: 18)),
                 ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const CadastroProfessorView(),
+                      ),
+                    );
+                  },
+                  child: const Text('Não tem uma conta? Cadastre-se'),
+                ),
               ],
             ),
           ),
@@ -71,3 +84,4 @@ class _LoginViewState extends State<LoginView> {
     );
   }
 }
+

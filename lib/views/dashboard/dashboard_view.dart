@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gabarito_plus/views/dashboard/dashboard_alunos.dart';
+import 'package:gabarito_plus/views/disciplinas/consulta_disciplinas.dart';
 import 'package:gabarito_plus/views/provas/configuracao_prova.dart';
 import '../../mocks/mock_professor.dart';
 import '../auth/profile_view.dart';
@@ -59,12 +60,6 @@ class DashboardView extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Text(
-                      usuarioMock.materias.join(' • '),
-                      style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
                     const SizedBox(height: 32),
                     GridView.count(
                       shrinkWrap: true,
@@ -95,6 +90,18 @@ class DashboardView extends StatelessWidget {
                             MaterialPageRoute(
                                 builder: (context) =>
                                     const ListaQuestoesView()),
+                          ),
+                        ),
+                        _buildMenuCard(
+                          context,
+                          'Disciplinas & Assuntos',
+                          Icons.bookmark,
+                          Colors.purple,
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    const ConsultaDisciplinasView()),
                           ),
                         ),
                         _buildMenuCard(
