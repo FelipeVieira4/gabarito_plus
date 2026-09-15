@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gabarito_plus/views/correcao/camera_correcao.dart';
 import 'package:gabarito_plus/views/dashboard/dashboard_alunos.dart';
 import 'package:gabarito_plus/views/disciplinas/consulta_disciplinas.dart';
 import 'package:gabarito_plus/views/provas/configuracao_prova.dart';
@@ -121,7 +122,11 @@ class DashboardView extends StatelessWidget {
                           'Corrigir Provas',
                           Icons.camera_alt,
                           Colors.red,
-                          () {},
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const CameraCorrecao()),
+                          ),
                         ),
                       ],
                     ),
