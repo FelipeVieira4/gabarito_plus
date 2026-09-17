@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:gabarito_plus/features/dashboard/ui/dashboard_alunos.dart';
-import 'package:gabarito_plus/features/geracao_prova/ui/configuracao_prova.dart';
-import '../../professor/data/mock_professor.dart';
-import '../../professor/ui/profile_view.dart';
-import '../../questoes/ui/consulta_questoes.dart';
+import 'package:gabarito_plus/views/correcao/camera_correcao.dart';
+import 'package:gabarito_plus/views/dashboard/dashboard_alunos.dart';
+import 'package:gabarito_plus/views/disciplinas/consulta_disciplinas.dart';
+import 'package:gabarito_plus/views/provas/configuracao_prova.dart';
+import '../../mocks/mock_professor.dart';
+import '../auth/profile_view.dart';
+import '../questoes/consulta_questoes.dart';
 
 class DashboardView extends StatelessWidget {
   const DashboardView({super.key});
@@ -59,12 +61,6 @@ class DashboardView extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Text(
-                      usuarioMock.materias.join(' • '),
-                      style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
                     const SizedBox(height: 32),
                     GridView.count(
                       shrinkWrap: true,
@@ -99,6 +95,18 @@ class DashboardView extends StatelessWidget {
                         ),
                         _buildMenuCard(
                           context,
+                          'Disciplinas & Assuntos',
+                          Icons.bookmark,
+                          Colors.purple,
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    const ConsultaDisciplinasView()),
+                          ),
+                        ),
+                        _buildMenuCard(
+                          context,
                           'Gerar Provas',
                           Icons.description,
                           Colors.green,
@@ -114,7 +122,11 @@ class DashboardView extends StatelessWidget {
                           'Corrigir Provas',
                           Icons.camera_alt,
                           Colors.red,
-                          () {},
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const CameraCorrecao()),
+                          ),
                         ),
                       ],
                     ),
