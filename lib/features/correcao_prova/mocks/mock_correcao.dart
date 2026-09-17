@@ -1,6 +1,6 @@
-import 'package:gabarito_plus/mocks/mock_leitura.dart';
-import 'package:gabarito_plus/models/correcao.dart';
-import 'package:gabarito_plus/services/correcao_service.dart';
+import 'package:gabarito_plus/features/correcao_prova/mocks/mock_leitura.dart';
+import 'package:gabarito_plus/features/geracao_prova/data/correcao.dart';
+import 'package:gabarito_plus/features/correcao_prova/services/correcao_service.dart';
 
 
 final DateTime dataAplicacaoMock = DateTime(2026, 9, 10, 14, 30);

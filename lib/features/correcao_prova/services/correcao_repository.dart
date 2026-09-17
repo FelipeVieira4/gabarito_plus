@@ -1,5 +1,5 @@
-import 'package:gabarito_plus/mocks/mock_correcao.dart';
-import 'package:gabarito_plus/models/correcao.dart';
+import 'package:gabarito_plus/features/correcao_prova/mocks/mock_correcao.dart';
+import 'package:gabarito_plus/features/geracao_prova/data/correcao.dart';
 
 class CorrecaoRepository {
   CorrecaoRepository._();

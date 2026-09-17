@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:gabarito_plus/mocks/mock_disciplina.dart';
-import 'package:gabarito_plus/models/assunto.dart';
-import 'package:gabarito_plus/models/disciplina.dart';
-import 'package:gabarito_plus/services/questoes_service.dart';
+import 'package:gabarito_plus/features/disciplina/data/assunto.dart';
+import 'package:gabarito_plus/features/disciplina/data/disciplina.dart';
+import 'package:gabarito_plus/features/disciplina/data/mock_disciplina.dart';
+import 'package:gabarito_plus/features/questoes/service/questoes_service.dart';
 
 class ConsultaDisciplinasView extends StatefulWidget {
   const ConsultaDisciplinasView({super.key});

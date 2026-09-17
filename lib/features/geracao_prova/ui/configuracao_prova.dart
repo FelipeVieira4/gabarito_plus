@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:gabarito_plus/mocks/mock_turma.dart';
-import 'package:gabarito_plus/models/assunto.dart';
-import 'package:gabarito_plus/models/disciplina.dart';
-import 'package:gabarito_plus/models/prova.dart';
-import 'package:gabarito_plus/models/questao.dart';
-import 'package:gabarito_plus/models/turma.dart';
-import 'package:gabarito_plus/services/questoes_service.dart';
-import 'package:gabarito_plus/views/provas/visualizacao_embaralhamento.dart';
+import 'package:gabarito_plus/features/disciplina/data/assunto.dart';
+import 'package:gabarito_plus/features/disciplina/data/disciplina.dart';
+import 'package:gabarito_plus/features/geracao_prova/data/prova.dart';
+import 'package:gabarito_plus/features/geracao_prova/ui/visualizacao_embaralhamento.dart';
+import 'package:gabarito_plus/features/questoes/data/questao.dart';
+import 'package:gabarito_plus/features/questoes/service/questoes_service.dart';
+import 'package:gabarito_plus/features/turma/data/mock_turma.dart';
+import 'package:gabarito_plus/features/turma/data/turma.dart';
+
 
 class ConfiguracaoProva extends StatefulWidget {
   const ConfiguracaoProva({super.key});

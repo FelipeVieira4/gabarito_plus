@@ -1,4 +1,4 @@
-import 'package:gabarito_plus/models/gabarito_lido.dart';
+import 'package:gabarito_plus/features/geracao_prova/data/gabarito_lido.dart';
 
 const String tituloProvaMock = 'Prova 1 — Engenharia de Software';
 const String turmaProvaMock = 'Engenharia de Software 06/2025';

@@ -1,6 +1,6 @@
-import 'package:gabarito_plus/models/correcao.dart';
-import 'package:gabarito_plus/models/estatistica_prova.dart';
-import 'package:gabarito_plus/models/gabarito_lido.dart';
+import 'package:gabarito_plus/features/geracao_prova/data/correcao.dart';
+import 'package:gabarito_plus/features/geracao_prova/data/estatistica_prova.dart';
+import 'package:gabarito_plus/features/geracao_prova/data/gabarito_lido.dart';
 
 
 class CorrecaoService {

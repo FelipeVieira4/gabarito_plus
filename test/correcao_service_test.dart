@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gabarito_plus/mocks/mock_correcao.dart';
-import 'package:gabarito_plus/mocks/mock_leitura.dart';
-import 'package:gabarito_plus/models/gabarito_lido.dart';
-import 'package:gabarito_plus/services/correcao_service.dart';
+import 'package:gabarito_plus/features/correcao_prova/mocks/mock_correcao.dart';
+import 'package:gabarito_plus/features/correcao_prova/mocks/mock_leitura.dart';
+import 'package:gabarito_plus/features/geracao_prova/data/gabarito_lido.dart';
+import 'package:gabarito_plus/features/correcao_prova/services/correcao_service.dart';
 
 void main() {
   final service = CorrecaoService();

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gabarito_plus/mocks/mock_leitura.dart';
-import 'package:gabarito_plus/services/correcao_repository.dart';
-import 'package:gabarito_plus/views/correcao/camera_correcao.dart';
+import 'package:gabarito_plus/features/correcao_prova/mocks/mock_leitura.dart';
+import 'package:gabarito_plus/features/correcao_prova/services/correcao_repository.dart';
+import 'package:gabarito_plus/features/correcao_prova/views/correcao/camera_correcao.dart';
 
 void main() {
   setUp(() {

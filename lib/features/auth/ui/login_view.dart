@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../dashboard/dashboard_view.dart';
-import 'cadastro_professor_view.dart';
+import 'package:gabarito_plus/features/correcao_prova/views/auth/cadastro_professor_view.dart';
+import 'package:gabarito_plus/features/dashboard/ui/dashboard_view.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
