@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'views/auth/login_view.dart';
+import 'features/auth/ui/login_view.dart';
 
 void main() {
   runApp(const GabaritoPlus());
