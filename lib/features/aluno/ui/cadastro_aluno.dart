@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:gabarito_plus/features/aluno/data/mock_aluno.dart';
 import 'package:gabarito_plus/features/aluno/data/aluno.dart';
+import 'package:gabarito_plus/features/aluno/service/aluno_service.dart';
 
 class CadastroAluno extends StatefulWidget {
   const CadastroAluno({super.key, required this.title, this.aluno});
@@ -13,12 +13,14 @@ class CadastroAluno extends StatefulWidget {
 }
 
 class _CadastroAlunoState extends State<CadastroAluno> {
+  final _service = AlunoService();
   final _formKey = GlobalKey<FormState>();
   final _idController = TextEditingController();
   final _nomeController = TextEditingController();
   final _emailController = TextEditingController();
 
-  bool _isAtivo = true; // Novo estado para o campo isAtivo
+  bool _isAtivo = true;
+  bool _salvando = false;
   Aluno? _alunoEncontrado;
 
   bool get _isEdicao => _alunoEncontrado != null;
@@ -28,7 +30,7 @@ class _CadastroAlunoState extends State<CadastroAluno> {
     super.initState();
     if (widget.aluno != null) {
       _idController.text = widget.aluno!.id;
-      _carregarAluno(widget.aluno!.id);
+      _preencher(widget.aluno);
     }
   }
 
@@ -40,17 +42,14 @@ class _CadastroAlunoState extends State<CadastroAluno> {
     super.dispose();
   }
 
-  void _carregarAluno(String id) {
-    final encontrado = listaAlunos.where((a) => a.id == id).toList();
-
+  void _preencher(Aluno? aluno) {
     setState(() {
-      if (encontrado.isNotEmpty) {
-        _alunoEncontrado = encontrado.first;
-        _nomeController.text = _alunoEncontrado!.nome;
-        _emailController.text = _alunoEncontrado!.email;
-        _isAtivo = _alunoEncontrado!.isAtivo; // Carrega o status do aluno
+      _alunoEncontrado = aluno;
+      if (aluno != null) {
+        _nomeController.text = aluno.nome;
+        _emailController.text = aluno.email;
+        _isAtivo = aluno.isAtivo;
       } else {
-        _alunoEncontrado = null;
         _nomeController.clear();
         _emailController.clear();
         _isAtivo = true;
@@ -58,47 +57,49 @@ class _CadastroAlunoState extends State<CadastroAluno> {
     });
   }
 
-  void _salvarAluno() {
+  Future<void> _carregarAluno(String id) async {
+    final aluno = await _service.buscarPorId(id.trim());
+    if (!mounted) return;
+    _preencher(aluno);
+  }
+
+  Future<void> _salvarAluno() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final idDigitado = _idController.text.trim();
+    setState(() => _salvando = true);
+    final eraEdicao = _isEdicao;
 
-    if (_isEdicao) {
-      final index = listaAlunos.indexWhere((a) => a.id == _alunoEncontrado!.id);
-      if (index != -1) {
-        setState(() {
-          listaAlunos[index] = Aluno(
-            id: _alunoEncontrado!.id,
-            nome: _nomeController.text.trim(),
-            email: _emailController.text.trim(),
-            isAtivo: _isAtivo,
-          );
-        });
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Aluno atualizado com sucesso!')),
-      );
-    } else {
-      final novoId = idDigitado.isNotEmpty
-          ? idDigitado
-          : (listaAlunos.length + 1).toString();
-
-      final novoAluno = Aluno(
-        id: novoId,
+    try {
+      final idSalvo = await _service.salvar(
+        id: _idController.text.trim(),
         nome: _nomeController.text.trim(),
         email: _emailController.text.trim(),
         isAtivo: _isAtivo,
       );
 
+      if (!mounted) return;
       setState(() {
-        listaAlunos.add(novoAluno);
-        _alunoEncontrado = novoAluno;
-        _idController.text = novoAluno.id;
+        _idController.text = idSalvo;
       });
+      await _carregarAluno(idSalvo);
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Aluno cadastrado com sucesso!')),
+        SnackBar(
+          content: Text(
+            eraEdicao
+                ? 'Aluno atualizado com sucesso!'
+                : 'Aluno cadastrado com sucesso!',
+          ),
+        ),
       );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao salvar: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _salvando = false);
     }
   }
 
@@ -114,12 +115,19 @@ class _CadastroAlunoState extends State<CadastroAluno> {
             child: const Text('Cancelar'),
           ),
           TextButton(
-            onPressed: () {
-              setState(() {
-                listaAlunos.removeWhere((a) => a.id == _alunoEncontrado!.id);
-              });
+            onPressed: () async {
+              final id = _alunoEncontrado!.id;
               Navigator.pop(ctx);
-              Navigator.pop(context);
+              try {
+                await _service.excluir(id);
+                if (!mounted) return;
+                Navigator.pop(context);
+              } catch (e) {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Erro ao excluir: $e')),
+                );
+              }
             },
             child: const Text('Excluir'),
           ),
@@ -174,7 +182,6 @@ class _CadastroAlunoState extends State<CadastroAluno> {
                         onChanged: _carregarAluno,
                       ),
                       const SizedBox(height: 16),
-
                       isWide
                           ? Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -191,10 +198,7 @@ class _CadastroAlunoState extends State<CadastroAluno> {
                                 _campoEmail(),
                               ],
                             ),
-
                       const SizedBox(height: 16),
-
-                      // Campo de Status Ativo/Inativo
                       SwitchListTile(
                         title: const Text('Aluno Ativo'),
                         subtitle: Text(
@@ -203,21 +207,22 @@ class _CadastroAlunoState extends State<CadastroAluno> {
                               : 'Inativo (não aparecerá em novas turmas)',
                         ),
                         value: _isAtivo,
-                        onChanged: (bool value) {
-                          setState(() {
-                            _isAtivo = value;
-                          });
-                        },
+                        onChanged: (v) => setState(() => _isAtivo = v),
                         secondary: Icon(
                           _isAtivo ? Icons.check_circle : Icons.cancel,
                           color: _isAtivo ? Colors.green : Colors.red,
                         ),
                       ),
-
                       const SizedBox(height: 24),
                       ElevatedButton.icon(
-                        onPressed: _salvarAluno,
-                        icon: const Icon(Icons.save),
+                        onPressed: _salvando ? null : _salvarAluno,
+                        icon: _salvando
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.save),
                         label: Text(
                           _isEdicao ? 'Salvar Alterações' : 'Cadastrar Aluno',
                         ),
