@@ -15,89 +15,64 @@ class CadastroAluno extends StatefulWidget {
 class _CadastroAlunoState extends State<CadastroAluno> {
   final _service = AlunoService();
   final _formKey = GlobalKey<FormState>();
-  final _idController = TextEditingController();
   final _nomeController = TextEditingController();
   final _emailController = TextEditingController();
 
   bool _isAtivo = true;
   bool _salvando = false;
-  Aluno? _alunoEncontrado;
 
-  bool get _isEdicao => _alunoEncontrado != null;
+  bool get _isEdicao => widget.aluno != null;
 
   @override
   void initState() {
     super.initState();
-    if (widget.aluno != null) {
-      _idController.text = widget.aluno!.id;
-      _preencher(widget.aluno);
+    final aluno = widget.aluno;
+    if (aluno != null) {
+      _nomeController.text = aluno.nome;
+      _emailController.text = aluno.email;
+      _isAtivo = aluno.isAtivo;
     }
   }
 
   @override
   void dispose() {
-    _idController.dispose();
     _nomeController.dispose();
     _emailController.dispose();
     super.dispose();
   }
 
-  void _preencher(Aluno? aluno) {
-    setState(() {
-      _alunoEncontrado = aluno;
-      if (aluno != null) {
-        _nomeController.text = aluno.nome;
-        _emailController.text = aluno.email;
-        _isAtivo = aluno.isAtivo;
-      } else {
-        _nomeController.clear();
-        _emailController.clear();
-        _isAtivo = true;
-      }
-    });
-  }
-
-  Future<void> _carregarAluno(String id) async {
-    final aluno = await _service.buscarPorId(id.trim());
-    if (!mounted) return;
-    _preencher(aluno);
+  void _mensagem(String texto) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(texto)));
   }
 
   Future<void> _salvarAluno() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _salvando = true);
-    final eraEdicao = _isEdicao;
 
     try {
-      final idSalvo = await _service.salvar(
-        id: _idController.text.trim(),
+      await _service.salvar(
+        id: widget.aluno?.id ?? '', // vazio = novo aluno
         nome: _nomeController.text.trim(),
         email: _emailController.text.trim(),
         isAtivo: _isAtivo,
       );
 
       if (!mounted) return;
-      setState(() {
-        _idController.text = idSalvo;
-      });
-      await _carregarAluno(idSalvo);
 
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            eraEdicao
-                ? 'Aluno atualizado com sucesso!'
-                : 'Aluno cadastrado com sucesso!',
-          ),
-        ),
-      );
+      if (_isEdicao) {
+        _mensagem('Aluno atualizado com sucesso!');
+      } else {
+        // Cadastro novo: limpa a tela para o próximo aluno
+        _nomeController.clear();
+        _emailController.clear();
+        _formKey.currentState!.reset();
+        setState(() => _isAtivo = true);
+        _mensagem('Aluno cadastrado com sucesso!');
+      }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao salvar: $e')),
-      );
+      _mensagem('Erro ao salvar: $e');
     } finally {
       if (mounted) setState(() => _salvando = false);
     }
@@ -108,7 +83,7 @@ class _CadastroAlunoState extends State<CadastroAluno> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Confirmar exclusão'),
-        content: Text('Deseja realmente excluir ${_alunoEncontrado!.nome}?'),
+        content: Text('Deseja realmente excluir ${widget.aluno!.nome}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -116,7 +91,7 @@ class _CadastroAlunoState extends State<CadastroAluno> {
           ),
           TextButton(
             onPressed: () async {
-              final id = _alunoEncontrado!.id;
+              final id = widget.aluno!.id;
               Navigator.pop(ctx);
               try {
                 await _service.excluir(id);
@@ -124,9 +99,7 @@ class _CadastroAlunoState extends State<CadastroAluno> {
                 Navigator.pop(context);
               } catch (e) {
                 if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Erro ao excluir: $e')),
-                );
+                _mensagem('Erro ao excluir: $e');
               }
             },
             child: const Text('Excluir'),
@@ -164,24 +137,6 @@ class _CadastroAlunoState extends State<CadastroAluno> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      TextFormField(
-                        controller: _idController,
-                        decoration: InputDecoration(
-                          labelText: 'ID do Aluno',
-                          border: const OutlineInputBorder(),
-                          prefixIcon: const Icon(Icons.badge),
-                          helperText: _idController.text.trim().isEmpty
-                              ? 'Deixe em branco para novo cadastro'
-                              : (_isEdicao
-                                  ? 'Aluno encontrado'
-                                  : 'ID não encontrado — será criado ao salvar'),
-                          helperStyle: TextStyle(
-                            color: _isEdicao ? Colors.green : Colors.grey[600],
-                          ),
-                        ),
-                        onChanged: _carregarAluno,
-                      ),
-                      const SizedBox(height: 16),
                       isWide
                           ? Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
