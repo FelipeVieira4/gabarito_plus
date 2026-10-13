@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:gabarito_plus/features/turma/data/mock_turma.dart';
 import 'package:gabarito_plus/features/turma/data/turma.dart';
-import 'package:gabarito_plus/features/turma/service/turma_service.dart'; // ajuste o caminho
-import 'package:gabarito_plus/features/turma/ui/cadastro_turma.dart'; // ajuste o caminho
-
+import 'package:gabarito_plus/features/turma/service/turma_service.dart';
+import 'package:gabarito_plus/features/turma/ui/cadastro_turma.dart';
 
 class ConsultaTurma extends StatefulWidget {
   const ConsultaTurma({super.key});
@@ -15,27 +13,41 @@ class ConsultaTurma extends StatefulWidget {
 class _ConsultaTurmaState extends State<ConsultaTurma> {
   final _turmaService = TurmaService();
   bool _apenasAtivas = false;
+  late Future<List<Turma>> _futureTurmas;
 
-  // Decide qual lista exibir com base no filtro marcado
-  List<Turma> get _turmasExibidas {
-    return _apenasAtivas
-        ? _turmaService.obterListaTurmaAtivas()
-        : listaTurma;
+  @override
+  void initState() {
+    super.initState();
+    _futureTurmas = _turmaService.listarTurmas();
+  }
+
+  void _recarregar() {
+    setState(() {
+      _futureTurmas = _turmaService.listarTurmas(apenasAtivas: _apenasAtivas);
+    });
+  }
+
+  Future<void> _abrirCadastro({Turma? turma}) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CadastroTurma(
+          title: turma == null ? 'Cadastro de Turma' : 'Editar Turma',
+          turma: turma,
+        ),
+      ),
+    );
+    if (mounted) _recarregar();
   }
 
   @override
   Widget build(BuildContext context) {
-    final turmas = _turmasExibidas;
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Consulta de Turmas'),
-      ),
+      appBar: AppBar(title: const Text('Consulta de Turmas')),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
-            // Filtro: mostra só as turmas ativas
             Card(
               margin: EdgeInsets.zero,
               shape: RoundedRectangleBorder(
@@ -47,93 +59,90 @@ class _ConsultaTurmaState extends State<ConsultaTurma> {
                 title: const Text('Mostrar apenas turmas ativas'),
                 controlAffinity: ListTileControlAffinity.leading,
                 onChanged: (checked) {
-                  setState(() {
-                    _apenasAtivas = checked ?? false;
-                  });
+                  _apenasAtivas = checked ?? false;
+                  _recarregar();
                 },
               ),
             ),
             const SizedBox(height: 8),
-            // Lista de turmas (vazia = nenhuma turma bate com o filtro atual)
             Expanded(
-              child: turmas.isEmpty
-                  ? const Center(
-                      child: Text('Nenhuma turma encontrada.'),
-                    )
-                  : ListView.separated(
-                      itemCount: turmas.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 12),
-                      itemBuilder: (context, index) {
-                        final turma = turmas[index];
+              child: FutureBuilder<List<Turma>>(
+                future: _futureTurmas,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Text('Erro ao carregar: ${snapshot.error}'),
+                    );
+                  }
 
-                        return Card(
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                  final turmas = snapshot.data ?? [];
+                  if (turmas.isEmpty) {
+                    return const Center(
+                        child: Text('Nenhuma turma encontrada.'));
+                  }
+
+                  return ListView.separated(
+                    itemCount: turmas.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final turma = turmas[index];
+
+                      return Card(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: ExpansionTile(
+                          leading: CircleAvatar(
+                            child: Text(turma.listaAlunos.length.toString()),
                           ),
-                          child: ExpansionTile(
-                            leading: CircleAvatar(
-                              child: Text(turma.listaAlunos.length.toString()),
-                            ),
-                            title: Text(
-                              turma.nomeTurma,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: Text(
-                              '${turma.listaAlunos.length} aluno(s)'
-                              '${turma.ativa ? '' : ' • Inativa'}',
-                            ),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.edit),
-                              tooltip: 'Editar Turma',
-                              onPressed: () async {
-                                await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => CadastroTurma(
-                                      title: 'Editar Turma',
-                                      turma: turma,
-                                    ),
+                          title: Text(
+                            turma.nomeTurma,
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            '${turma.listaAlunos.length} aluno(s)'
+                            '${turma.ativa ? '' : ' • Inativa'}',
+                          ),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.edit),
+                            tooltip: 'Editar Turma',
+                            onPressed: () => _abrirCadastro(turma: turma),
+                          ),
+                          children: turma.listaAlunos.isEmpty
+                              ? const [
+                                  Padding(
+                                    padding: EdgeInsets.all(12.0),
+                                    child: Text('Nenhum aluno vinculado.'),
                                   ),
-                                );
-                                setState(() {});
-                              },
-                            ),
-                            children: turma.listaAlunos.isEmpty
-                                ? [
-                                    const Padding(
-                                      padding: EdgeInsets.all(12.0),
-                                      child: Text('Nenhum aluno vinculado.'),
+                                ]
+                              : turma.listaAlunos.map((aluno) {
+                                  return ListTile(
+                                    dense: true,
+                                    leading: CircleAvatar(
+                                      radius: 14,
+                                      child: Text(aluno.nome[0]),
                                     ),
-                                  ]
-                                : turma.listaAlunos.map((aluno) {
-                                    return ListTile(
-                                      dense: true,
-                                      leading: CircleAvatar(
-                                        radius: 14,
-                                        child: Text(aluno.nome[0]),
-                                      ),
-                                      title: Text(aluno.nome),
-                                      subtitle: Text(aluno.email),
-                                    );
-                                  }).toList(),
-                          ),
-                        );
-                      },
-                    ),
+                                    title: Text(aluno.nome),
+                                    subtitle: Text(aluno.email),
+                                  );
+                                }).toList(),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          Navigator.push<bool>(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const CadastroTurma(title: "Cadastro de Turma"),
-            ),
-          );
-        },
+        onPressed: () => _abrirCadastro(),
         child: const Icon(Icons.add),
       ),
     );
