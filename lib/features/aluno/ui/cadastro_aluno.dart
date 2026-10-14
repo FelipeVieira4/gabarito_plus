@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:gabarito_plus/features/aluno/data/mock_aluno.dart';
 import 'package:gabarito_plus/features/aluno/data/aluno.dart';
+import 'package:gabarito_plus/features/aluno/service/aluno_service.dart';
 
 class CadastroAluno extends StatefulWidget {
   const CadastroAluno({super.key, required this.title, this.aluno});
@@ -13,92 +13,68 @@ class CadastroAluno extends StatefulWidget {
 }
 
 class _CadastroAlunoState extends State<CadastroAluno> {
+  final _service = AlunoService();
   final _formKey = GlobalKey<FormState>();
-  final _idController = TextEditingController();
   final _nomeController = TextEditingController();
   final _emailController = TextEditingController();
 
-  bool _isAtivo = true; // Novo estado para o campo isAtivo
-  Aluno? _alunoEncontrado;
+  bool _isAtivo = true;
+  bool _salvando = false;
 
-  bool get _isEdicao => _alunoEncontrado != null;
+  bool get _isEdicao => widget.aluno != null;
 
   @override
   void initState() {
     super.initState();
-    if (widget.aluno != null) {
-      _idController.text = widget.aluno!.id;
-      _carregarAluno(widget.aluno!.id);
+    final aluno = widget.aluno;
+    if (aluno != null) {
+      _nomeController.text = aluno.nome;
+      _emailController.text = aluno.email;
+      _isAtivo = aluno.isAtivo;
     }
   }
 
   @override
   void dispose() {
-    _idController.dispose();
     _nomeController.dispose();
     _emailController.dispose();
     super.dispose();
   }
 
-  void _carregarAluno(String id) {
-    final encontrado = listaAlunos.where((a) => a.id == id).toList();
-
-    setState(() {
-      if (encontrado.isNotEmpty) {
-        _alunoEncontrado = encontrado.first;
-        _nomeController.text = _alunoEncontrado!.nome;
-        _emailController.text = _alunoEncontrado!.email;
-        _isAtivo = _alunoEncontrado!.isAtivo; // Carrega o status do aluno
-      } else {
-        _alunoEncontrado = null;
-        _nomeController.clear();
-        _emailController.clear();
-        _isAtivo = true;
-      }
-    });
+  void _mensagem(String texto) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(texto)));
   }
 
-  void _salvarAluno() {
+  Future<void> _salvarAluno() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final idDigitado = _idController.text.trim();
+    setState(() => _salvando = true);
 
-    if (_isEdicao) {
-      final index = listaAlunos.indexWhere((a) => a.id == _alunoEncontrado!.id);
-      if (index != -1) {
-        setState(() {
-          listaAlunos[index] = Aluno(
-            id: _alunoEncontrado!.id,
-            nome: _nomeController.text.trim(),
-            email: _emailController.text.trim(),
-            isAtivo: _isAtivo,
-          );
-        });
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Aluno atualizado com sucesso!')),
-      );
-    } else {
-      final novoId = idDigitado.isNotEmpty
-          ? idDigitado
-          : (listaAlunos.length + 1).toString();
-
-      final novoAluno = Aluno(
-        id: novoId,
+    try {
+      await _service.salvar(
+        id: widget.aluno?.id ?? '', // vazio = novo aluno
         nome: _nomeController.text.trim(),
         email: _emailController.text.trim(),
         isAtivo: _isAtivo,
       );
 
-      setState(() {
-        listaAlunos.add(novoAluno);
-        _alunoEncontrado = novoAluno;
-        _idController.text = novoAluno.id;
-      });
+      if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Aluno cadastrado com sucesso!')),
-      );
+      if (_isEdicao) {
+        _mensagem('Aluno atualizado com sucesso!');
+      } else {
+        // Cadastro novo: limpa a tela para o próximo aluno
+        _nomeController.clear();
+        _emailController.clear();
+        _formKey.currentState!.reset();
+        setState(() => _isAtivo = true);
+        _mensagem('Aluno cadastrado com sucesso!');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      _mensagem('Erro ao salvar: $e');
+    } finally {
+      if (mounted) setState(() => _salvando = false);
     }
   }
 
@@ -107,19 +83,24 @@ class _CadastroAlunoState extends State<CadastroAluno> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Confirmar exclusão'),
-        content: Text('Deseja realmente excluir ${_alunoEncontrado!.nome}?'),
+        content: Text('Deseja realmente excluir ${widget.aluno!.nome}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Cancelar'),
           ),
           TextButton(
-            onPressed: () {
-              setState(() {
-                listaAlunos.removeWhere((a) => a.id == _alunoEncontrado!.id);
-              });
+            onPressed: () async {
+              final id = widget.aluno!.id;
               Navigator.pop(ctx);
-              Navigator.pop(context);
+              try {
+                await _service.excluir(id);
+                if (!mounted) return;
+                Navigator.pop(context);
+              } catch (e) {
+                if (!mounted) return;
+                _mensagem('Erro ao excluir: $e');
+              }
             },
             child: const Text('Excluir'),
           ),
@@ -156,25 +137,6 @@ class _CadastroAlunoState extends State<CadastroAluno> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      TextFormField(
-                        controller: _idController,
-                        decoration: InputDecoration(
-                          labelText: 'ID do Aluno',
-                          border: const OutlineInputBorder(),
-                          prefixIcon: const Icon(Icons.badge),
-                          helperText: _idController.text.trim().isEmpty
-                              ? 'Deixe em branco para novo cadastro'
-                              : (_isEdicao
-                                  ? 'Aluno encontrado'
-                                  : 'ID não encontrado — será criado ao salvar'),
-                          helperStyle: TextStyle(
-                            color: _isEdicao ? Colors.green : Colors.grey[600],
-                          ),
-                        ),
-                        onChanged: _carregarAluno,
-                      ),
-                      const SizedBox(height: 16),
-
                       isWide
                           ? Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -191,10 +153,7 @@ class _CadastroAlunoState extends State<CadastroAluno> {
                                 _campoEmail(),
                               ],
                             ),
-
                       const SizedBox(height: 16),
-
-                      // Campo de Status Ativo/Inativo
                       SwitchListTile(
                         title: const Text('Aluno Ativo'),
                         subtitle: Text(
@@ -203,21 +162,22 @@ class _CadastroAlunoState extends State<CadastroAluno> {
                               : 'Inativo (não aparecerá em novas turmas)',
                         ),
                         value: _isAtivo,
-                        onChanged: (bool value) {
-                          setState(() {
-                            _isAtivo = value;
-                          });
-                        },
+                        onChanged: (v) => setState(() => _isAtivo = v),
                         secondary: Icon(
                           _isAtivo ? Icons.check_circle : Icons.cancel,
                           color: _isAtivo ? Colors.green : Colors.red,
                         ),
                       ),
-
                       const SizedBox(height: 24),
                       ElevatedButton.icon(
-                        onPressed: _salvarAluno,
-                        icon: const Icon(Icons.save),
+                        onPressed: _salvando ? null : _salvarAluno,
+                        icon: _salvando
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.save),
                         label: Text(
                           _isEdicao ? 'Salvar Alterações' : 'Cadastrar Aluno',
                         ),

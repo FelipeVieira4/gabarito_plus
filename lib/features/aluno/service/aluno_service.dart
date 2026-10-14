@@ -1,33 +1,57 @@
-import 'package:gabarito_plus/features/aluno/data/mock_aluno.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gabarito_plus/features/aluno/data/aluno.dart';
 
 class AlunoService {
-  List<Aluno> obterListaAlunosFiltrado({
+  final _col = FirebaseFirestore.instance.collection('alunos');
+
+  /// Lista em tempo real. O filtro por nome é feito no app,
+  /// porque o Firestore não tem "contains" nativo.
+  Stream<List<Aluno>> streamAlunosFiltrado({
     String? nomeAluno,
     bool apenasAtivos = false,
   }) {
-    List<Aluno> resultado = listaAlunos;
+    Query<Map<String, dynamic>> query = _col;
 
     if (apenasAtivos) {
-      resultado = obterListaAlunosAtivo(resultado);
+      query = query.where('isAtivo', isEqualTo: true);
     }
 
-    if (nomeAluno != null && nomeAluno.isNotEmpty) {
-      resultado = obterListaAlunosPeloNome(nomeAluno, resultado);
-    }
+    return query.snapshots().map((snap) {
+      var lista = snap.docs.map(Aluno.fromFirestore).toList();
 
-    return resultado;
+      if (nomeAluno != null && nomeAluno.trim().isNotEmpty) {
+        final termo = nomeAluno.toLowerCase();
+        lista = lista
+            .where((a) => a.nome.toLowerCase().contains(termo))
+            .toList();
+      }
+
+      lista.sort(
+        (a, b) => a.nome.toLowerCase().compareTo(b.nome.toLowerCase()),
+      );
+      return lista;
+    });
   }
 
-  List<Aluno> obterListaAlunosAtivo([List<Aluno>? fonte]) {
-    final base = fonte ?? listaAlunos;
-    return base.where((aluno) => aluno.isAtivo).toList();
+  Future<Aluno?> buscarPorId(String id) async {
+    if (id.isEmpty) return null;
+    final doc = await _col.doc(id).get();
+    return doc.exists ? Aluno.fromFirestore(doc) : null;
   }
 
-  List<Aluno> obterListaAlunosPeloNome(String name, [List<Aluno>? fonte]) {
-    final base = fonte ?? listaAlunos;
-    return base
-        .where((aluno) => aluno.nome.toLowerCase().contains(name.toLowerCase()))
-        .toList();
+  /// Cria ou atualiza. Se [id] for vazio, o Firestore gera um ID automático.
+  /// Retorna o id do documento salvo.
+  Future<String> salvar({
+    required String id,
+    required String nome,
+    required String email,
+    required bool isAtivo,
+  }) async {
+    final aluno = Aluno(id: id, nome: nome, email: email, isAtivo: isAtivo);
+    final doc = id.isEmpty ? _col.doc() : _col.doc(id);
+    await doc.set(aluno.toMap());
+    return doc.id;
   }
+
+  Future<void> excluir(String id) => _col.doc(id).delete();
 }

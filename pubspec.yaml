@@ -37,6 +37,8 @@ dependencies:
 
   # Geração de QR Code para o gabarito (tela de Gerar Provas)
   qr_flutter: ^4.1.0
+  firebase_core: ^4.15.0
+  cloud_firestore: ^6.10.0
 
 dev_dependencies:
   flutter_test:
