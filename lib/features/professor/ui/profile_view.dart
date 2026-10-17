@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
-import '../data/mock_professor.dart';
-import '../../auth/ui/login_view.dart';
+import 'package:gabarito_plus/features/auth/service/auth_service.dart';
+import 'package:gabarito_plus/features/auth/ui/login_view.dart';
 
 class ProfileView extends StatelessWidget {
   const ProfileView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final authService = AuthService();
+    final usuario = authService.usuarioAtual;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Perfil'),
@@ -22,30 +25,32 @@ class ProfileView extends StatelessWidget {
                 child: Icon(Icons.person, size: 50),
               ),
               const SizedBox(height: 24),
-              _buildInfoRow('Nome', usuarioMock.nome),
-              _buildInfoRow('E-mail', usuarioMock.email),
+              _buildInfoRow('Nome', usuario?.displayName ?? 'Não disponível'),
+              _buildInfoRow('E-mail', usuario?.email ?? 'Não disponível'),
               const SizedBox(height: 32),
               ElevatedButton.icon(
-              onPressed: () {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginView()),
-                  (route) => false,
-                );
-              },
-              icon: const Icon(Icons.logout),
-              label: const Text('Sair da Conta'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red[50],
-                foregroundColor: Colors.red,
-                minimumSize: const Size(double.infinity, 50),
+                onPressed: () async {
+                  await authService.logout();
+                  if (!context.mounted) return;
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => const LoginView()),
+                    (route) => false,
+                  );
+                },
+                icon: const Icon(Icons.logout),
+                label: const Text('Sair da Conta'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red[50],
+                  foregroundColor: Colors.red,
+                  minimumSize: const Size(double.infinity, 50),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-   );
+    );
   }
 
   Widget _buildInfoRow(String label, String value) {
