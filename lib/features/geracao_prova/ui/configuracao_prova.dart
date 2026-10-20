@@ -21,8 +21,9 @@ class _ConfiguracaoProvaState extends State<ConfiguracaoProva> {
   final _tituloController = TextEditingController();
   final _questoesService = QuestoesService();
 
-  late final List<Disciplina> _disciplinas;
-  
+  List<Disciplina> _disciplinas = [];
+  bool _carregandoDisciplinas = true;
+
   Disciplina? _disciplinaSelecionada;
   Assunto? _assuntoSelecionado;
   Turma? _turmaSelecionada;
@@ -35,7 +36,22 @@ class _ConfiguracaoProvaState extends State<ConfiguracaoProva> {
   @override
   void initState() {
     super.initState();
-    _disciplinas = _questoesService.obterDisciplinas();
+    _carregarDisciplinas();
+  }
+
+  Future<void> _carregarDisciplinas() async {
+    try {
+      final disciplinas = await _questoesService.obterDisciplinas();
+      if (!mounted) return;
+      setState(() {
+        _disciplinas = disciplinas;
+        _carregandoDisciplinas = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _carregandoDisciplinas = false);
+      _mostrarAviso('Erro ao carregar disciplinas: $e');
+    }
   }
 
   @override
@@ -178,6 +194,9 @@ class _ConfiguracaoProvaState extends State<ConfiguracaoProva> {
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.school),
                 ),
+                hint: _carregandoDisciplinas
+                    ? const Text('Carregando disciplinas...')
+                    : null,
                 items: _disciplinas
                     .map((disciplina) => DropdownMenuItem(
                           value: disciplina,

@@ -56,7 +56,7 @@ Professores com carga horária alta enfrentam semanas com centenas de provas par
 lib/
 ├── models/         # Entidades de domínio (Aluno, Turma, Disciplina, Assunto, Questao, Prova, VersaoProva, Correcao, GabaritoLido...)
 ├── mocks/          # Dados simulados para desenvolvimento (alunos, turmas, disciplinas, leituras)
-├── services/       # Regras de negócio (AlunoService, TurmaService, QuestoesService, CorrecaoService, CorrecaoRepository)
+├── services/       # Regras de negócio (AlunoService, TurmaService, DisciplinasService, QuestoesService, CorrecaoService, CorrecaoRepository)
 ├── widgets/         # Componentes reutilizáveis (ex.: ResponsiveContainer)
 └── views/
     ├── auth/         # Login, cadastro de professor, perfil

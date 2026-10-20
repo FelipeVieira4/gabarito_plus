@@ -32,31 +32,43 @@ class _CadastroQuestaoViewState extends State<CadastroQuestaoView> {
       List.generate(4, (_) => TextEditingController());
   int _alternativaCorretaIndex = 0;
 
-  late final List<Disciplina> _disciplinas;
+  List<Disciplina> _disciplinas = [];
   Disciplina? _disciplinaSelecionada;
   Assunto? _assuntoSelecionado;
+  bool _carregando = true;
+  bool _salvando = false;
 
   @override
   void initState() {
     super.initState();
-    _disciplinas = _service.obterDisciplinas();
 
     if (widget.isEdicao) {
       _carregarDadosEdicao();
+    }
+    _carregarDisciplinas();
+  }
+
+  Future<void> _carregarDisciplinas() async {
+    try {
+      final disciplinas = await _service.obterDisciplinas();
+      if (!mounted) return;
+      setState(() {
+        _disciplinas = disciplinas;
+        if (widget.isEdicao) {
+          _selecionarDisciplinaEAssuntoDaEdicao();
+        }
+        _carregando = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _carregando = false);
+      _mensagem('Erro ao carregar disciplinas: $e');
     }
   }
 
   void _carregarDadosEdicao() {
     final q = widget.questaoParaEditar!;
     _enunciadoController.text = q.enunciado;
-
-    _disciplinaSelecionada =
-        widget.disciplinaInicial ?? _service.obterDisciplinaDaQuestao(q);
-
-    if (_disciplinaSelecionada != null) {
-      _assuntoSelecionado =
-          widget.assuntoInicial ?? _service.obterAssuntoDaQuestao(q);
-    }
 
     for (int i = 0; i < q.alternativas.length && i < 4; i++) {
       _alternativasControllers[i].text = q.alternativas[i].texto;
@@ -66,7 +78,27 @@ class _CadastroQuestaoViewState extends State<CadastroQuestaoView> {
     }
   }
 
-  void _salvar() {
+  void _selecionarDisciplinaEAssuntoDaEdicao() {
+    final q = widget.questaoParaEditar!;
+
+    _disciplinaSelecionada = _disciplinas
+            .where((d) => d.id == widget.disciplinaInicial?.id)
+            .firstOrNull ??
+        _service.obterDisciplinaDaQuestao(_disciplinas, q);
+
+    if (_disciplinaSelecionada != null) {
+      _assuntoSelecionado = _disciplinaSelecionada!.assuntos
+              .where((a) => a.id == widget.assuntoInicial?.id)
+              .firstOrNull ??
+          _service.obterAssuntoDaQuestao(_disciplinas, q);
+    }
+  }
+
+  void _mensagem(String texto) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(texto)));
+  }
+
+  Future<void> _salvar() async {
     if (!_formKey.currentState!.validate()) return;
 
     final alternativas = List.generate(4, (index) {
@@ -76,43 +108,38 @@ class _CadastroQuestaoViewState extends State<CadastroQuestaoView> {
       );
     });
 
-    if (widget.isEdicao) {
-      final questaoAtualizada = Questao(
-        id: widget.questaoParaEditar!.id,
-        enunciado: _enunciadoController.text,
-        alternativas: alternativas,
-      );
-
-      _service.editarQuestao(
-        disciplinaId: _disciplinaSelecionada!.id,
-        assuntoId: _assuntoSelecionado!.id,
-        questao: questaoAtualizada,
-      );
-    } else {
-      final novaQuestao = _service.criarQuestao(
-        enunciado: _enunciadoController.text,
-        alternativas: alternativas,
-      );
-
-      _service.adicionarQuestao(
-        disciplinaId: _disciplinaSelecionada!.id,
-        assuntoId: _assuntoSelecionado!.id,
-        questao: novaQuestao,
-      );
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          widget.isEdicao
-              ? 'Questão atualizada com sucesso!'
-              : 'Questão cadastrada com sucesso!',
-        ),
-        backgroundColor: Colors.green,
-      ),
+    final questao = Questao(
+      id: widget.questaoParaEditar?.id ?? '',
+      enunciado: _enunciadoController.text,
+      alternativas: alternativas,
     );
 
-    Navigator.pop(context, true);
+    setState(() => _salvando = true);
+    try {
+      await _service.salvarQuestao(
+        disciplinaId: _disciplinaSelecionada!.id,
+        assuntoId: _assuntoSelecionado!.id,
+        questao: questao,
+      );
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            widget.isEdicao
+                ? 'Questão atualizada com sucesso!'
+                : 'Questão cadastrada com sucesso!',
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _salvando = false);
+      _mensagem('Erro ao salvar questão: $e');
+    }
   }
 
   @override
@@ -123,7 +150,9 @@ class _CadastroQuestaoViewState extends State<CadastroQuestaoView> {
       appBar: AppBar(
         title: Text(widget.isEdicao ? 'Editar Questão' : 'Cadastrar Questão'),
       ),
-      body: LayoutBuilder(
+      body: _carregando
+          ? const Center(child: CircularProgressIndicator())
+          : LayoutBuilder(
         builder: (context, constraints) {
           final isWide = constraints.maxWidth >= 700;
 
@@ -199,16 +228,22 @@ class _CadastroQuestaoViewState extends State<CadastroQuestaoView> {
 
                     const SizedBox(height: 32),
                     ElevatedButton(
-                      onPressed: _salvar,
+                      onPressed: _salvando ? null : _salvar,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      child: Text(
-                        widget.isEdicao
-                            ? 'Salvar Alterações'
-                            : 'Salvar Questão',
-                        style: const TextStyle(fontSize: 16),
-                      ),
+                      child: _salvando
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(
+                              widget.isEdicao
+                                  ? 'Salvar Alterações'
+                                  : 'Salvar Questão',
+                              style: const TextStyle(fontSize: 16),
+                            ),
                     ),
                   ],
                 ),

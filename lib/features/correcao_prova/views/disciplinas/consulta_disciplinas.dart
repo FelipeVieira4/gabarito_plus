@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:gabarito_plus/features/disciplina/data/assunto.dart';
 import 'package:gabarito_plus/features/disciplina/data/disciplina.dart';
-import 'package:gabarito_plus/features/disciplina/data/mock_disciplina.dart';
-import 'package:gabarito_plus/features/questoes/service/questoes_service.dart';
+import 'package:gabarito_plus/features/disciplina/service/disciplinas_service.dart';
 
 class ConsultaDisciplinasView extends StatefulWidget {
   const ConsultaDisciplinasView({super.key});
@@ -13,9 +11,17 @@ class ConsultaDisciplinasView extends StatefulWidget {
 }
 
 class _ConsultaDisciplinasViewState extends State<ConsultaDisciplinasView> {
-  final _service = QuestoesService();
+  final _service = DisciplinasService();
   final _buscaController = TextEditingController();
   String? _disciplinaExpandidaId;
+  List<Disciplina> _disciplinas = [];
+  bool _carregando = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarDisciplinas();
+  }
 
   @override
   void dispose() {
@@ -23,8 +29,25 @@ class _ConsultaDisciplinasViewState extends State<ConsultaDisciplinasView> {
     super.dispose();
   }
 
+  Future<void> _carregarDisciplinas() async {
+    try {
+      final disciplinas = await _service.listarDisciplinas();
+      if (!mounted) return;
+      setState(() {
+        _disciplinas = disciplinas;
+        _carregando = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _carregando = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao carregar disciplinas: $e')),
+      );
+    }
+  }
+
   List<Disciplina> get _disciplinasFiltradas {
-    final todas = _service.obterDisciplinas();
+    final todas = _disciplinas;
     final termo = _buscaController.text.trim().toLowerCase();
     if (termo.isEmpty) return todas;
 
@@ -130,11 +153,8 @@ class _ConsultaDisciplinasViewState extends State<ConsultaDisciplinasView> {
     );
 
     if (disciplinaIdCriada != null) {
-      setState(() {
-        _disciplinaExpandidaId = disciplinaIdCriada;
-      });
-    } else {
-      setState(() {});
+      _disciplinaExpandidaId = disciplinaIdCriada;
+      await _carregarDisciplinas();
     }
   }
 
@@ -146,16 +166,14 @@ class _ConsultaDisciplinasViewState extends State<ConsultaDisciplinasView> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (modalContext) => ModalCadastroAssunto(
+        disciplinas: _disciplinas,
         onSalvo: () {},
       ),
     );
 
     if (disciplinaIdAtualizada != null) {
-      setState(() {
-        _disciplinaExpandidaId = disciplinaIdAtualizada;
-      });
-    } else {
-      setState(() {});
+      _disciplinaExpandidaId = disciplinaIdAtualizada;
+      await _carregarDisciplinas();
     }
   }
 
@@ -196,7 +214,9 @@ class _ConsultaDisciplinasViewState extends State<ConsultaDisciplinasView> {
 
             // Lista de Disciplinas e Assuntos
             Expanded(
-              child: disciplinas.isEmpty
+              child: _carregando
+                  ? const Center(child: CircularProgressIndicator())
+                  : disciplinas.isEmpty
                   ? const Center(
                       child: Text('Nenhuma disciplina ou assunto encontrado.'),
                     )
@@ -286,6 +306,8 @@ class ModalCadastroDisciplina extends StatefulWidget {
 class _ModalCadastroDisciplinaState extends State<ModalCadastroDisciplina> {
   final _formKey = GlobalKey<FormState>();
   final _nomeController = TextEditingController();
+  final _service = DisciplinasService();
+  bool _salvando = false;
 
   @override
   void dispose() {
@@ -293,16 +315,18 @@ class _ModalCadastroDisciplinaState extends State<ModalCadastroDisciplina> {
     super.dispose();
   }
 
-  void _salvar() {
-    if (_formKey.currentState!.validate()) {
-      final nomeDisciplina = _nomeController.text.trim();
+  Future<void> _salvar() async {
+    if (!_formKey.currentState!.validate()) return;
 
-      // Verifica se a disciplina já existe no mock
-      final jaExiste = listaDisciplina.any(
-        (d) => d.descricao.toLowerCase() == nomeDisciplina.toLowerCase(),
-      );
+    final nomeDisciplina = _nomeController.text.trim();
+    setState(() => _salvando = true);
+
+    try {
+      final jaExiste = await _service.existeDisciplina(nomeDisciplina);
+      if (!mounted) return;
 
       if (jaExiste) {
+        setState(() => _salvando = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Esta disciplina já está cadastrada!'),
@@ -312,13 +336,8 @@ class _ModalCadastroDisciplinaState extends State<ModalCadastroDisciplina> {
         return;
       }
 
-      final novaDisciplina = Disciplina(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        descricao: nomeDisciplina,
-        assuntos: [],
-      );
-
-      listaDisciplina.add(novaDisciplina);
+      final novaDisciplinaId = await _service.criarDisciplina(nomeDisciplina);
+      if (!mounted) return;
 
       if (widget.onSalvo != null) {
         widget.onSalvo!();
@@ -331,7 +350,13 @@ class _ModalCadastroDisciplinaState extends State<ModalCadastroDisciplina> {
         ),
       );
 
-      Navigator.pop(context, novaDisciplina.id);
+      Navigator.pop(context, novaDisciplinaId);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _salvando = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao salvar disciplina: $e')),
+      );
     }
   }
 
@@ -385,14 +410,20 @@ class _ModalCadastroDisciplinaState extends State<ModalCadastroDisciplina> {
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
-                  onPressed: _salvar,
+                  onPressed: _salvando ? null : _salvar,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
-                  child: const Text(
-                    'Salvar',
-                    style: TextStyle(fontSize: 16),
-                  ),
+                  child: _salvando
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text(
+                          'Salvar',
+                          style: TextStyle(fontSize: 16),
+                        ),
                 ),
               ],
             ),
@@ -404,9 +435,14 @@ class _ModalCadastroDisciplinaState extends State<ModalCadastroDisciplina> {
 }
 
 class ModalCadastroAssunto extends StatefulWidget {
+  final List<Disciplina> disciplinas;
   final VoidCallback? onSalvo;
 
-  const ModalCadastroAssunto({super.key, this.onSalvo});
+  const ModalCadastroAssunto({
+    super.key,
+    required this.disciplinas,
+    this.onSalvo,
+  });
 
   @override
   State<ModalCadastroAssunto> createState() => _ModalCadastroAssuntoState();
@@ -415,11 +451,9 @@ class ModalCadastroAssunto extends StatefulWidget {
 class _ModalCadastroAssuntoState extends State<ModalCadastroAssunto> {
   final _formKey = GlobalKey<FormState>();
   final _nomeController = TextEditingController();
-  String? _disciplinaSelecionada;
-
-  List<String> get _opcoesDisciplinas {
-    return listaDisciplina.map((d) => d.descricao).toSet().toList();
-  }
+  final _service = DisciplinasService();
+  Disciplina? _disciplinaSelecionada;
+  bool _salvando = false;
 
   @override
   void dispose() {
@@ -427,33 +461,19 @@ class _ModalCadastroAssuntoState extends State<ModalCadastroAssunto> {
     super.dispose();
   }
 
-  void _salvar() {
-    if (_formKey.currentState!.validate()) {
-      final disciplinaNome = _disciplinaSelecionada!;
-      final nomeAssunto = _nomeController.text.trim();
+  Future<void> _salvar() async {
+    if (!_formKey.currentState!.validate()) return;
 
-      // Procura a disciplina no mock listaDisciplina ou cria uma nova se não existir
-      final disciplina = listaDisciplina.firstWhere(
-        (d) => d.descricao.toLowerCase() == disciplinaNome.toLowerCase(),
-        orElse: () {
-          final novaDisciplina = Disciplina(
-            id: DateTime.now().millisecondsSinceEpoch.toString(),
-            descricao: disciplinaNome,
-            assuntos: [],
-          );
-          listaDisciplina.add(novaDisciplina);
-          return novaDisciplina;
-        },
-      );
+    final disciplina = _disciplinaSelecionada!;
+    final nomeAssunto = _nomeController.text.trim();
+    setState(() => _salvando = true);
 
-      // Adiciona o novo assunto na disciplina no mock
-      disciplina.assuntos.add(
-        Assunto(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          nome: nomeAssunto,
-          questoes: [],
-        ),
+    try {
+      await _service.criarAssunto(
+        disciplinaId: disciplina.id,
+        nome: nomeAssunto,
       );
+      if (!mounted) return;
 
       if (widget.onSalvo != null) {
         widget.onSalvo!();
@@ -466,6 +486,12 @@ class _ModalCadastroAssuntoState extends State<ModalCadastroAssunto> {
         ),
       );
       Navigator.pop(context, disciplina.id);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _salvando = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao salvar assunto: $e')),
+      );
     }
   }
 
@@ -503,17 +529,17 @@ class _ModalCadastroAssuntoState extends State<ModalCadastroAssunto> {
                   ],
                 ),
                 const SizedBox(height: 20),
-                DropdownButtonFormField<String>(
+                DropdownButtonFormField<Disciplina>(
                   initialValue: _disciplinaSelecionada,
                   decoration: const InputDecoration(
                     labelText: 'Disciplina',
                     prefixIcon: Icon(Icons.school),
                     border: OutlineInputBorder(),
                   ),
-                  items: _opcoesDisciplinas.map((disciplina) {
-                    return DropdownMenuItem<String>(
+                  items: widget.disciplinas.map((disciplina) {
+                    return DropdownMenuItem<Disciplina>(
                       value: disciplina,
-                      child: Text(disciplina),
+                      child: Text(disciplina.descricao),
                     );
                   }).toList(),
                   onChanged: (value) {
@@ -522,7 +548,7 @@ class _ModalCadastroAssuntoState extends State<ModalCadastroAssunto> {
                     });
                   },
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
+                    if (value == null) {
                       return 'Selecione uma disciplina';
                     }
                     return null;
@@ -545,14 +571,20 @@ class _ModalCadastroAssuntoState extends State<ModalCadastroAssunto> {
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
-                  onPressed: _salvar,
+                  onPressed: _salvando ? null : _salvar,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
-                  child: const Text(
-                    'Salvar',
-                    style: TextStyle(fontSize: 16),
-                  ),
+                  child: _salvando
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text(
+                          'Salvar',
+                          style: TextStyle(fontSize: 16),
+                        ),
                 ),
               ],
             ),
