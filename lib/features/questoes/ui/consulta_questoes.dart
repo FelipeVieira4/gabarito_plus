@@ -17,22 +17,41 @@ class _ListaQuestoesViewState extends State<ListaQuestoesView> {
   final _service = QuestoesService();
   final _buscaController = TextEditingController();
 
-  late final List<Disciplina> _disciplinas;
+  List<Disciplina> _disciplinas = [];
   Disciplina? _disciplinaFiltro;
   Assunto? _assuntoFiltro;
+  bool _carregando = true;
 
   List<Questao> _questoesFiltradas = [];
 
   @override
   void initState() {
     super.initState();
-    _disciplinas = _service.obterDisciplinas();
-    _aplicarFiltros();
+    _carregarQuestoes();
+  }
+
+  Future<void> _carregarQuestoes() async {
+    try {
+      final disciplinas = await _service.obterDisciplinas();
+      if (!mounted) return;
+      setState(() {
+        _disciplinas = disciplinas;
+        _carregando = false;
+      });
+      _aplicarFiltros();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _carregando = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao carregar questões: $e')),
+      );
+    }
   }
 
   void _aplicarFiltros() {
     setState(() {
       _questoesFiltradas = _service.obterQuestoes(
+        _disciplinas,
         disciplinaId: _disciplinaFiltro?.id,
         assuntoId: _assuntoFiltro?.id,
         busca: _buscaController.text,
@@ -81,7 +100,7 @@ class _ListaQuestoesViewState extends State<ListaQuestoesView> {
     );
 
     if (editouComSucesso == true) {
-      _aplicarFiltros();
+      _carregarQuestoes();
     }
   }
 
@@ -89,7 +108,10 @@ class _ListaQuestoesViewState extends State<ListaQuestoesView> {
   Widget build(BuildContext context) {
     final assuntosDoFiltro = _disciplinaFiltro == null
         ? const <Assunto>[]
-        : _service.obterAssuntos(disciplinaId: _disciplinaFiltro!.id);
+        : _service.obterAssuntos(
+            _disciplinas,
+            disciplinaId: _disciplinaFiltro!.id,
+          );
 
     return Scaffold(
       appBar: AppBar(
@@ -174,17 +196,19 @@ class _ListaQuestoesViewState extends State<ListaQuestoesView> {
                     ),
                   ),
                   Expanded(
-                    child: _questoesFiltradas.isEmpty
+                    child: _carregando
+                        ? const Center(child: CircularProgressIndicator())
+                        : _questoesFiltradas.isEmpty
                         ? const Center(child: Text('Nenhuma questão encontrada.'))
                         : ListView.builder(
                             padding: const EdgeInsets.symmetric(horizontal: 16.0),
                             itemCount: _questoesFiltradas.length,
                             itemBuilder: (context, index) {
                               final questao = _questoesFiltradas[index];
-                              final disciplina =
-                                  _service.obterDisciplinaDaQuestao(questao);
-                              final assunto =
-                                  _service.obterAssuntoDaQuestao(questao);
+                              final disciplina = _service
+                                  .obterDisciplinaDaQuestao(_disciplinas, questao);
+                              final assunto = _service
+                                  .obterAssuntoDaQuestao(_disciplinas, questao);
 
                               return Card(
                                 elevation: 2,
@@ -257,7 +281,7 @@ class _ListaQuestoesViewState extends State<ListaQuestoesView> {
           );
 
           if (cadastrouComSucesso == true) {
-            _aplicarFiltros();
+            _carregarQuestoes();
           }
         },
         child: const Icon(Icons.add),
