@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gabarito_plus/features/correcao_prova/mocks/mock_leitura.dart';
 import 'package:gabarito_plus/features/correcao_prova/services/correcao_repository.dart';
 import 'package:gabarito_plus/features/correcao_prova/services/correcao_service.dart';
+import 'package:gabarito_plus/features/correcao_prova/views/correcao/consulta_provas_corrigidas.dart';
 import 'package:gabarito_plus/features/geracao_prova/data/correcao.dart';
 import 'package:gabarito_plus/features/geracao_prova/data/gabarito_lido.dart';
 
@@ -180,13 +181,25 @@ class _CameraCorrecaoState extends State<CameraCorrecao> {
             if (_corrigidasNaSessao > 0)
               Center(
                 child: Padding(
-                  padding: const EdgeInsets.only(right: 16),
+                  padding: const EdgeInsets.only(right: 8),
                   child: Text(
                     '$_corrigidasNaSessao corrigidas',
                     style: Theme.of(context).textTheme.labelMedium,
                   ),
                 ),
               ),
+            IconButton(
+              tooltip: 'Ver provas corrigidas',
+              icon: const Icon(Icons.assignment_turned_in_outlined),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ConsultaProvasCorrigidasView(),
+                  ),
+                );
+              },
+            ),
           ],
         ),
         body: SafeArea(child: _buildEtapa()),
