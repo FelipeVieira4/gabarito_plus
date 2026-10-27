@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RespostaMarcada {
   final int numeroQuestao;
@@ -29,6 +30,9 @@ class RespostaMarcada {
 
 class Correcao {
   final String codigoVersao;
+  final String provaId;
+  final String turmaId;
+  final String alunoId;
   final String tituloProva;
   final String nomeTurma;
   final String nomeAluno;
@@ -40,6 +44,9 @@ class Correcao {
 
   Correcao({
     required this.codigoVersao,
+    this.provaId = '',
+    this.turmaId = '',
+    this.alunoId = '',
     required this.tituloProva,
     required this.nomeTurma,
     required this.nomeAluno,
@@ -47,6 +54,56 @@ class Correcao {
     required this.quantidadeAlternativas,
     required this.dataHora,
   });
+
+  factory Correcao.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
+    return Correcao.fromMap(doc.id, doc.data() ?? {});
+  }
+
+  /// O id do documento é o código da versão lido no QR Code.
+  factory Correcao.fromMap(String codigoVersao, Map<String, dynamic> data) {
+    final marcadas = List<int?>.from(data['respostasMarcadas'] ?? []);
+    final corretas = List<int>.from(data['respostasCorretas'] ?? []);
+    final dataHora = data['dataHora'];
+
+    return Correcao(
+      codigoVersao: codigoVersao,
+      provaId: data['provaId'] ?? '',
+      turmaId: data['turmaId'] ?? '',
+      alunoId: data['alunoId'] ?? '',
+      tituloProva: data['tituloProva'] ?? '',
+      nomeTurma: data['nomeTurma'] ?? '',
+      nomeAluno: data['nomeAluno'] ?? '',
+      respostas: [
+        for (var i = 0; i < corretas.length; i++)
+          RespostaMarcada(
+            numeroQuestao: i + 1,
+            indiceMarcado: i < marcadas.length ? marcadas[i] : null,
+            indiceCorreto: corretas[i],
+          ),
+      ],
+      quantidadeAlternativas: data['quantidadeAlternativas'] ?? 0,
+      dataHora: dataHora is Timestamp ? dataHora.toDate() : DateTime.now(),
+    );
+  }
+
+  /// Acertos, erros, em branco e nota também são gravados para que a consulta
+  /// consiga filtrar e ordenar por eles (o Firestore não enxerga os getters).
+  Map<String, dynamic> toMap() => {
+        'provaId': provaId,
+        'turmaId': turmaId,
+        'alunoId': alunoId,
+        'tituloProva': tituloProva,
+        'nomeTurma': nomeTurma,
+        'nomeAluno': nomeAluno,
+        'respostasMarcadas': respostas.map((r) => r.indiceMarcado).toList(),
+        'respostasCorretas': respostas.map((r) => r.indiceCorreto).toList(),
+        'quantidadeAlternativas': quantidadeAlternativas,
+        'acertos': acertos,
+        'erros': erros,
+        'emBranco': emBranco,
+        'nota': nota,
+        'dataHora': Timestamp.fromDate(dataHora),
+      };
 
   int get totalQuestoes => respostas.length;
 
@@ -94,6 +151,9 @@ class Correcao {
 
     return Correcao(
       codigoVersao: codigoVersao,
+      provaId: provaId,
+      turmaId: turmaId,
+      alunoId: alunoId,
       tituloProva: tituloProva,
       nomeTurma: nomeTurma,
       nomeAluno: nomeAluno,
