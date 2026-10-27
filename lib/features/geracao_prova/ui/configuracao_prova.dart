@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:gabarito_plus/features/disciplina/data/assunto.dart';
 import 'package:gabarito_plus/features/disciplina/data/disciplina.dart';
 import 'package:gabarito_plus/features/geracao_prova/data/prova.dart';
+import 'package:gabarito_plus/features/geracao_prova/service/prova_repository.dart';
 import 'package:gabarito_plus/features/geracao_prova/ui/visualizacao_embaralhamento.dart';
 import 'package:gabarito_plus/features/questoes/data/questao.dart';
 import 'package:gabarito_plus/features/questoes/service/questoes_service.dart';
-import 'package:gabarito_plus/features/turma/data/mock_turma.dart';
 import 'package:gabarito_plus/features/turma/data/turma.dart';
+import 'package:gabarito_plus/features/turma/service/turma_service.dart';
 
 
 class ConfiguracaoProva extends StatefulWidget {
@@ -20,9 +21,13 @@ class _ConfiguracaoProvaState extends State<ConfiguracaoProva> {
   final _formKey = GlobalKey<FormState>();
   final _tituloController = TextEditingController();
   final _questoesService = QuestoesService();
+  final _turmaService = TurmaService();
 
   List<Disciplina> _disciplinas = [];
   bool _carregandoDisciplinas = true;
+
+  List<Turma> _turmas = [];
+  bool _carregandoTurmas = true;
 
   Disciplina? _disciplinaSelecionada;
   Assunto? _assuntoSelecionado;
@@ -37,6 +42,22 @@ class _ConfiguracaoProvaState extends State<ConfiguracaoProva> {
   void initState() {
     super.initState();
     _carregarDisciplinas();
+    _carregarTurmas();
+  }
+
+  Future<void> _carregarTurmas() async {
+    try {
+      final turmas = await _turmaService.listarTurmas(apenasAtivas: true);
+      if (!mounted) return;
+      setState(() {
+        _turmas = turmas;
+        _carregandoTurmas = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _carregandoTurmas = false);
+      _mostrarAviso('Erro ao carregar turmas: $e');
+    }
   }
 
   Future<void> _carregarDisciplinas() async {
@@ -99,7 +120,7 @@ class _ConfiguracaoProvaState extends State<ConfiguracaoProva> {
     }
 
     final prova = Prova(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: gerarIdProva(),
       titulo: _tituloController.text.trim(),
       turma: _turmaSelecionada!,
       assunto: _assuntoSelecionado!,
@@ -171,7 +192,10 @@ class _ConfiguracaoProvaState extends State<ConfiguracaoProva> {
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.class_),
                 ),
-                items: listaTurma
+                hint: _carregandoTurmas
+                    ? const Text('Carregando turmas...')
+                    : null,
+                items: _turmas
                     .map((turma) => DropdownMenuItem(
                           value: turma,
                           child: Text(

@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gabarito_plus/features/correcao_prova/mocks/mock_correcao.dart';
 import 'package:gabarito_plus/features/correcao_prova/mocks/mock_leitura.dart';
 import 'package:gabarito_plus/features/correcao_prova/services/correcao_repository.dart';
 import 'package:gabarito_plus/features/correcao_prova/views/correcao/consulta_provas_corrigidas.dart';
 import 'package:gabarito_plus/features/dashboard/ui/dashboard_view.dart';
 import 'package:gabarito_plus/features/geracao_prova/data/correcao.dart';
 
+import 'helpers/correcao_repository_memoria.dart';
+
 void main() {
   setUp(() {
     reiniciarSimulacaoDeLeitura();
-    CorrecaoRepository.instancia.reiniciar();
+    CorrecaoRepository.instancia =
+        CorrecaoRepositoryMemoria(correcoesMock.take(6));
   });
 
   Future<void> abrirTela(
@@ -91,7 +95,7 @@ void main() {
   testWidgets('permite remover uma correção após confirmação no diálogo',
       (tester) async {
     final repo = CorrecaoRepository.instancia;
-    expect(repo.jaCorrigida('ES2025A-002'), isTrue);
+    expect(await repo.jaCorrigida('ES2025A-002'), isTrue);
 
     await abrirTela(tester);
 
@@ -109,7 +113,7 @@ void main() {
     await tester.tap(find.text('Remover'));
     await tester.pumpAndSettle();
 
-    expect(repo.jaCorrigida('ES2025A-002'), isFalse);
+    expect(await repo.jaCorrigida('ES2025A-002'), isFalse);
     expect(find.text('Ana Maria'), findsNothing);
   });
 

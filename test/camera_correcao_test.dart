@@ -1,15 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gabarito_plus/features/correcao_prova/mocks/mock_correcao.dart';
 import 'package:gabarito_plus/features/correcao_prova/mocks/mock_leitura.dart';
 import 'package:gabarito_plus/features/correcao_prova/services/correcao_repository.dart';
 import 'package:gabarito_plus/features/correcao_prova/views/correcao/camera_correcao.dart';
+
+import 'package:gabarito_plus/features/aluno/data/aluno.dart';
+import 'package:gabarito_plus/features/disciplina/data/assunto.dart';
+import 'package:gabarito_plus/features/geracao_prova/data/embaralhador.dart';
+import 'package:gabarito_plus/features/geracao_prova/data/prova.dart';
+import 'package:gabarito_plus/features/geracao_prova/service/prova_repository.dart';
+import 'package:gabarito_plus/features/questoes/data/alternativa.dart';
+import 'package:gabarito_plus/features/questoes/data/questao.dart';
+import 'package:gabarito_plus/features/turma/data/turma.dart';
+
+import 'helpers/correcao_repository_memoria.dart';
+import 'helpers/prova_repository_memoria.dart';
 
 void main() {
   setUp(() {
     // A simulação e o repositório são estado global: sem reiniciar, um teste
     // começa de onde o anterior parou.
     reiniciarSimulacaoDeLeitura();
-    CorrecaoRepository.instancia.reiniciar();
+    CorrecaoRepository.instancia =
+        CorrecaoRepositoryMemoria(correcoesMock.take(6));
+    ProvaRepository.instancia = ProvaRepositoryMemoria();
   });
 
   Future<void> abrirTela(WidgetTester tester) async {
@@ -58,7 +73,7 @@ void main() {
 
   testWidgets('salvar grava no repositório e volta para o QR', (tester) async {
     final repositorio = CorrecaoRepository.instancia;
-    final totalAntes = repositorio.total;
+    final totalAntes = (await repositorio.obterTodas()).length;
 
     await abrirTela(tester);
     await tocar(tester, 'Simular leitura do QR');
@@ -70,13 +85,13 @@ void main() {
     expect(find.text('Ler gabarito'), findsOneWidget);
     expect(find.text('1 corrigidas'), findsOneWidget);
 
-    final salva = repositorio.obterPorCodigo('ES2025A-001');
+    final salva = await repositorio.obterPorCodigo('ES2025A-001');
     expect(salva, isNotNull);
     expect(salva!.nomeAluno, 'José Perreira');
     expect(salva.nota, 8.0);
 
     // José já vinha corrigido nos mocks: salvar substitui, não duplica.
-    expect(repositorio.total, totalAntes);
+    expect((await repositorio.obterTodas()).length, totalAntes);
   });
 
   testWidgets('simulação segue para o próximo aluno da turma', (tester) async {
@@ -171,5 +186,73 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Ler gabarito'), findsOneWidget);
+  });
+
+  testWidgets('prova gerada e salva é encontrada pelo código e corrigida',
+      (tester) async {
+    final questoes = [
+      for (var i = 1; i <= 3; i++)
+        Questao(
+          id: 'q$i',
+          enunciado: 'Questão $i',
+          alternativas: [
+            Alternativa(texto: 'A', isCorreta: i == 1),
+            Alternativa(texto: 'B', isCorreta: i == 2),
+            Alternativa(texto: 'C', isCorreta: i == 3),
+          ],
+        ),
+    ];
+    final prova = Prova(
+      id: 'ABC234',
+      titulo: 'Prova Real',
+      turma: Turma(
+        id: 'turma-x',
+        nomeTurma: 'Turma X',
+        listaAlunos: [
+          Aluno(id: 'aluno-x', nome: 'Carla Souza', email: '', isAtivo: true),
+        ],
+        ativa: true,
+      ),
+      assunto: Assunto(id: 'assunto-x', nome: 'Assunto X', questoes: questoes),
+      questoes: questoes,
+      embaralharQuestoes: false,
+      embaralharAlternativas: false,
+    );
+    final versoes = Embaralhador.gerarVersoes(prova);
+    await ProvaRepository.instancia.salvar(prova, versoes);
+
+    await abrirTela(tester);
+    await tocar(tester, 'Digitar código da prova');
+    await tester.enterText(find.byType(TextField), 'abc234-01');
+    await tocar(tester, 'Buscar');
+
+    expect(find.text('Carla Souza'), findsOneWidget);
+    expect(find.text('ABC234-01'), findsOneWidget);
+
+    // Sem folha simulada para uma prova real: começa em branco.
+    await tocar(tester, 'Simular leitura da folha');
+    expect(find.textContaining('Folha em branco'), findsOneWidget);
+
+    // Acerta as questões 1 e 2 (A e B) e erra a 3 (marca A, a certa é C).
+    for (final chave in ['q1-alt0', 'q2-alt1', 'q3-alt0']) {
+      final alternativa = find.byKey(ValueKey(chave));
+      await tester.ensureVisible(alternativa);
+      await tester.tap(alternativa);
+      await tester.pumpAndSettle();
+    }
+
+    await tocar(tester, 'Confirmar e ver nota');
+    expect(find.text('2 acertos'), findsOneWidget);
+
+    await tocar(tester, 'Salvar e corrigir a próxima');
+
+    final salva =
+        await CorrecaoRepository.instancia.obterPorCodigo('ABC234-01');
+    expect(salva, isNotNull);
+    expect(salva!.provaId, 'ABC234');
+    expect(salva.turmaId, 'turma-x');
+    expect(salva.alunoId, 'aluno-x');
+    expect(salva.tituloProva, 'Prova Real');
+    expect(salva.acertos, 2);
   });
 }

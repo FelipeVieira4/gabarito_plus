@@ -1,47 +1,53 @@
-import 'package:gabarito_plus/features/correcao_prova/mocks/mock_correcao.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gabarito_plus/features/geracao_prova/data/correcao.dart';
 
-class CorrecaoRepository {
-  CorrecaoRepository._();
+/// Ponto único de acesso às correções salvas. As telas usam [instancia];
+/// os testes de widget trocam por uma versão em memória, já que não
+/// inicializam o Firebase.
+abstract class CorrecaoRepository {
+  static CorrecaoRepository instancia = CorrecaoRepositoryFirestore();
 
-  static final CorrecaoRepository instancia = CorrecaoRepository._();
+  Future<List<Correcao>> obterTodas();
 
-  final List<Correcao> _correcoes = List.of(correcoesMock.take(6));
+  Future<Correcao?> obterPorCodigo(String codigoVersao);
 
-  List<Correcao> obterTodas() => List.unmodifiable(_correcoes);
+  Future<bool> jaCorrigida(String codigoVersao);
 
-  int get total => _correcoes.length;
+  /// Corrigir de novo a mesma versão sobrescreve a correção anterior.
+  Future<void> salvar(Correcao correcao);
 
-  bool jaCorrigida(String codigoVersao) {
-    return _correcoes.any((correcao) => correcao.codigoVersao == codigoVersao);
+  Future<void> remover(String codigoVersao);
+}
+
+class CorrecaoRepositoryFirestore implements CorrecaoRepository {
+  // late: só acessa o Firebase no primeiro uso, não ao criar a instância
+  late final _correcoes = FirebaseFirestore.instance.collection('correcoes');
+
+  @override
+  Future<List<Correcao>> obterTodas() async {
+    final snap = await _correcoes.get();
+    final lista = snap.docs.map(Correcao.fromFirestore).toList();
+    lista.sort((a, b) => b.dataHora.compareTo(a.dataHora));
+    return lista;
   }
 
-  Correcao? obterPorCodigo(String codigoVersao) {
-    for (final correcao in _correcoes) {
-      if (correcao.codigoVersao == codigoVersao) return correcao;
-    }
-    return null;
+  @override
+  Future<Correcao?> obterPorCodigo(String codigoVersao) async {
+    final doc = await _correcoes.doc(codigoVersao).get();
+    return doc.exists ? Correcao.fromFirestore(doc) : null;
   }
 
-  void salvar(Correcao correcao) {
-    final indice = _correcoes.indexWhere(
-      (item) => item.codigoVersao == correcao.codigoVersao,
-    );
-
-    if (indice == -1) {
-      _correcoes.add(correcao);
-    } else {
-      _correcoes[indice] = correcao;
-    }
+  @override
+  Future<bool> jaCorrigida(String codigoVersao) async {
+    final doc = await _correcoes.doc(codigoVersao).get();
+    return doc.exists;
   }
 
-  void remover(String codigoVersao) {
-    _correcoes.removeWhere((correcao) => correcao.codigoVersao == codigoVersao);
-  }
+  @override
+  Future<void> salvar(Correcao correcao) =>
+      _correcoes.doc(correcao.codigoVersao).set(correcao.toMap());
 
-  void reiniciar() {
-    _correcoes
-      ..clear()
-      ..addAll(correcoesMock.take(6));
-  }
+  @override
+  Future<void> remover(String codigoVersao) =>
+      _correcoes.doc(codigoVersao).delete();
 }

@@ -7,7 +7,10 @@ class Embaralhador {
   static List<VersaoProva> gerarVersoes(Prova prova) {
     final random = Random();
 
-    return prova.turma.listaAlunos.map((aluno) {
+    final alunos = prova.turma.listaAlunos;
+
+    return List.generate(alunos.length, (indice) {
+      final aluno = alunos[indice];
       final questoes = List.of(prova.questoes);
       if (prova.embaralharQuestoes) {
         questoes.shuffle(random);
@@ -30,11 +33,13 @@ class Embaralhador {
           );
       }).toList();
 
+      // O código começa com o id da prova: a câmera encontra a versão
+      // em provas/{provaId}/versoes/{codigo} sem precisar de busca.
       return VersaoProva(
-        codigo: '${prova.id.toUpperCase()}-${aluno.id.padLeft(3, '0')}',
+        codigo: '${prova.id}-${(indice + 1).toString().padLeft(2, '0')}',
         aluno: aluno,
         questoes: questoesEmbaralhadas,
       );
-    }).toList();
+    });
   }
 }
