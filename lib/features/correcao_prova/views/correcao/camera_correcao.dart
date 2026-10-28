@@ -5,6 +5,7 @@ import 'package:gabarito_plus/features/correcao_prova/services/correcao_service.
 import 'package:gabarito_plus/features/correcao_prova/views/correcao/consulta_provas_corrigidas.dart';
 import 'package:gabarito_plus/features/geracao_prova/data/correcao.dart';
 import 'package:gabarito_plus/features/geracao_prova/data/gabarito_lido.dart';
+import 'package:gabarito_plus/features/geracao_prova/service/prova_repository.dart';
 
 const bool kModoSimulado = true;
 
@@ -25,6 +26,9 @@ class _CameraCorrecaoState extends State<CameraCorrecao> {
   GabaritoLido? _gabarito;
   Correcao? _correcao;
   int _corrigidasNaSessao = 0;
+  bool _jaCorrigida = false;
+  bool _folhaEmBranco = false;
+  bool _salvando = false;
 
 
   void _lerQrSimulado() {
@@ -39,7 +43,23 @@ class _CameraCorrecaoState extends State<CameraCorrecao> {
 
     if (codigo == null || !mounted) return;
 
-    final gabarito = gabaritoMockPorCodigo(codigo);
+    GabaritoLido? gabarito;
+    try {
+      gabarito = await ProvaRepository.instancia.buscarGabarito(codigo);
+    } catch (_) {
+      if (!mounted) return;
+      _avisar('Não foi possível buscar a prova. Verifique a conexão e tente '
+          'de novo.');
+      return;
+    }
+
+    // Enquanto a câmera é simulada, os códigos de exemplo (ES2025A-00X)
+    // continuam funcionando.
+    if (gabarito == null && kModoSimulado) {
+      gabarito = gabaritoMockPorCodigo(codigo);
+    }
+
+    if (!mounted) return;
     if (gabarito == null) {
       _avisar('Nenhuma prova encontrada com o código "$codigo"');
       return;
@@ -48,10 +68,21 @@ class _CameraCorrecaoState extends State<CameraCorrecao> {
     _aplicarGabarito(gabarito);
   }
 
-  void _aplicarGabarito(GabaritoLido gabarito) {
+  Future<void> _aplicarGabarito(GabaritoLido gabarito) async {
+    // Consultado uma vez aqui porque o build não pode esperar o Firestore.
+    // Se a consulta falhar, segue sem o aviso: salvar continua funcionando.
+    bool jaCorrigida;
+    try {
+      jaCorrigida = await _repository.jaCorrigida(gabarito.codigoVersao);
+    } catch (_) {
+      jaCorrigida = false;
+    }
+
+    if (!mounted) return;
     setState(() {
       _gabarito = gabarito;
       _correcao = null;
+      _jaCorrigida = jaCorrigida;
       _etapa = _Etapa.lendoFolha;
     });
   }
@@ -59,13 +90,17 @@ class _CameraCorrecaoState extends State<CameraCorrecao> {
 
   void _lerFolhaSimulada() {
     final gabarito = _gabarito!;
-    final folha = folhaMockPorCodigo(gabarito.codigoVersao);
+    final folhaMock = folhaMockPorCodigo(gabarito.codigoVersao);
 
-    if (folha == null) {
-      _avisar('Não foi possível ler a folha desta prova');
-      return;
-    }
+    // Prova real (não é exemplo do mock): sem câmera, a folha começa em
+    // branco e as respostas são marcadas na conferência.
+    final folha = folhaMock ??
+        FolhaLida(
+          codigoVersao: gabarito.codigoVersao,
+          respostasMarcadas: List.filled(gabarito.totalQuestoes, null),
+        );
 
+    _folhaEmBranco = folhaMock == null;
     _corrigir(gabarito, folha);
   }
 
@@ -75,6 +110,7 @@ class _CameraCorrecaoState extends State<CameraCorrecao> {
       (folha) => folha.codigoVersao != gabarito.codigoVersao,
     );
 
+    _folhaEmBranco = false;
     _corrigir(gabarito, outra);
   }
 
@@ -104,11 +140,23 @@ class _CameraCorrecaoState extends State<CameraCorrecao> {
   }
 
 
-  void _salvarESeguir() {
+  Future<void> _salvarESeguir() async {
     final correcao = _correcao!;
-    _repository.salvar(correcao);
 
+    setState(() => _salvando = true);
+    try {
+      await _repository.salvar(correcao);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _salvando = false);
+      _avisar('Não foi possível salvar a correção. Verifique a conexão e '
+          'tente de novo.');
+      return;
+    }
+
+    if (!mounted) return;
     setState(() {
+      _salvando = false;
       _corrigidasNaSessao++;
       _gabarito = null;
       _correcao = null;
@@ -253,12 +301,11 @@ class _CameraCorrecaoState extends State<CameraCorrecao> {
 
   Widget _buildLeituraFolha() {
     final gabarito = _gabarito!;
-    final jaCorrigida = _repository.jaCorrigida(gabarito.codigoVersao);
 
     return Column(
       children: [
         _FaixaIdentificacao(gabarito: gabarito),
-        if (jaCorrigida)
+        if (_jaCorrigida)
           const _Aviso(
             texto: 'Esta prova já foi corrigida antes. Salvar de novo '
                 'substitui o resultado anterior.',
@@ -296,9 +343,12 @@ class _CameraCorrecaoState extends State<CameraCorrecao> {
 
     return Column(
       children: [
-        const _Aviso(
-          texto: 'Confira o que foi lido da folha. Toque em uma alternativa '
-              'para corrigir; toque na marcada para deixar em branco.',
+        _Aviso(
+          texto: _folhaEmBranco
+              ? 'Folha em branco: marque as respostas do aluno. Toque na '
+                  'marcada para deixar em branco.'
+              : 'Confira o que foi lido da folha. Toque em uma alternativa '
+                  'para corrigir; toque na marcada para deixar em branco.',
           icone: Icons.edit_note,
         ),
         Expanded(
@@ -358,12 +408,21 @@ class _CameraCorrecaoState extends State<CameraCorrecao> {
         _PainelAcoes(
           children: [
             FilledButton.icon(
-              onPressed: _salvarESeguir,
-              icon: const Icon(Icons.save),
-              label: const Text('Salvar e corrigir a próxima'),
+              onPressed: _salvando ? null : _salvarESeguir,
+              icon: _salvando
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.save),
+              label: Text(
+                _salvando ? 'Salvando...' : 'Salvar e corrigir a próxima',
+              ),
             ),
             TextButton(
-              onPressed: () => setState(() => _etapa = _Etapa.conferindo),
+              onPressed: _salvando
+                  ? null
+                  : () => setState(() => _etapa = _Etapa.conferindo),
               child: const Text('Ajustar marcações'),
             ),
           ],

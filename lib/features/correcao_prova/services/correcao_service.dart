@@ -46,6 +46,9 @@ class CorrecaoService {
 
     return Correcao(
       codigoVersao: gabarito.codigoVersao,
+      provaId: gabarito.provaId,
+      turmaId: gabarito.turmaId,
+      alunoId: gabarito.alunoId,
       tituloProva: gabarito.tituloProva,
       nomeTurma: gabarito.nomeTurma,
       nomeAluno: gabarito.nomeAluno,

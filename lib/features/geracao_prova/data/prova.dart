@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gabarito_plus/features/disciplina/data/assunto.dart';
 import 'package:gabarito_plus/features/questoes/data/questao.dart';
 import 'package:gabarito_plus/features/turma/data/turma.dart';
@@ -20,4 +21,18 @@ class Prova {
     required this.embaralharQuestoes,
     required this.embaralharAlternativas,
   });
+
+  /// Formato salvo no Firestore (o id fica no documento, não nos campos).
+  /// Turma e assunto são guardados por id, com o nome copiado para exibição.
+  Map<String, dynamic> toMap() => {
+        'titulo': titulo,
+        'turmaId': turma.id,
+        'nomeTurma': turma.nomeTurma,
+        'assuntoId': assunto.id,
+        'nomeAssunto': assunto.nome,
+        'questoesIds': questoes.map((q) => q.id).toList(),
+        'embaralharQuestoes': embaralharQuestoes,
+        'embaralharAlternativas': embaralharAlternativas,
+        'criadaEm': FieldValue.serverTimestamp(),
+      };
 }

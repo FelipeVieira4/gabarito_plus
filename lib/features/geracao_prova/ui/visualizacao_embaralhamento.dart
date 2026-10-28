@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gabarito_plus/features/geracao_prova/data/embaralhador.dart';
 import 'package:gabarito_plus/features/geracao_prova/data/prova.dart';
 import 'package:gabarito_plus/features/geracao_prova/data/versao_prova.dart';
+import 'package:gabarito_plus/features/geracao_prova/service/prova_repository.dart';
 import 'package:gabarito_plus/features/geracao_prova/ui/gabarito_qrcode.dart';
 
 class VisualizacaoEmbaralhamento extends StatefulWidget {
@@ -15,6 +16,8 @@ class VisualizacaoEmbaralhamento extends StatefulWidget {
 
 class _VisualizacaoEmbaralhamentoState extends State<VisualizacaoEmbaralhamento> {
   late List<VersaoProva> _versoes;
+  bool _salvando = false;
+  bool _salva = false;
 
   @override
   void initState() {
@@ -24,6 +27,34 @@ class _VisualizacaoEmbaralhamentoState extends State<VisualizacaoEmbaralhamento>
 
   void _regerarVersoes() {
     setState(() => _versoes = Embaralhador.gerarVersoes(widget.prova));
+  }
+
+  Future<void> _salvarProvas() async {
+    setState(() => _salvando = true);
+    try {
+      await ProvaRepository.instancia.salvar(widget.prova, _versoes);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _salvando = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e is StateError
+              ? e.message
+              : 'Não foi possível salvar as provas. Verifique a conexão e '
+                  'tente de novo.'),
+        ),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _salvando = false;
+      _salva = true;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${_versoes.length} provas salvas')),
+    );
   }
 
   @override
@@ -36,8 +67,11 @@ class _VisualizacaoEmbaralhamentoState extends State<VisualizacaoEmbaralhamento>
         actions: [
           IconButton(
             icon: const Icon(Icons.shuffle),
-            tooltip: 'Gerar nova distribuição',
-            onPressed: _regerarVersoes,
+            // depois de salvas, as versões impressas precisam bater com o banco
+            tooltip: _salva
+                ? 'Provas já salvas: não é possível embaralhar de novo'
+                : 'Gerar nova distribuição',
+            onPressed: _salva || _salvando ? null : _regerarVersoes,
           ),
         ],
       ),
@@ -80,6 +114,22 @@ class _VisualizacaoEmbaralhamentoState extends State<VisualizacaoEmbaralhamento>
               ),
             ),
           ),
+          if (!_salva)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, size: 16, color: Colors.orange.shade800),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Provas ainda não salvas: a correção só encontra provas salvas.',
+                      style: TextStyle(fontSize: 12, color: Colors.orange.shade800),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.0),
             child: Align(
@@ -111,6 +161,30 @@ class _VisualizacaoEmbaralhamentoState extends State<VisualizacaoEmbaralhamento>
             ),
           ),
         ],
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: FilledButton.icon(
+            onPressed: _salva || _salvando ? null : _salvarProvas,
+            icon: _salvando
+                ? const SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(_salva ? Icons.check : Icons.save),
+            label: Text(
+              _salva
+                  ? 'Provas salvas'
+                  : _salvando
+                      ? 'Salvando...'
+                      : 'Salvar provas',
+            ),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
+            ),
+          ),
+        ),
       ),
     );
   }

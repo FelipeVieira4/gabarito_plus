@@ -40,13 +40,43 @@ class _ConsultaProvasCorrigidasViewState
   String? _provaFiltro;
   OrdenacaoCorrecao _ordenacao = OrdenacaoCorrecao.maiorNota;
 
+  List<Correcao> _correcoes = [];
+  bool _carregando = true;
+  bool _erroAoCarregar = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _carregar();
+  }
+
   @override
   void dispose() {
     _buscaController.dispose();
     super.dispose();
   }
 
-  List<Correcao> get _todasCorrecoes => _repository.obterTodas();
+  Future<void> _carregar() async {
+    setState(() {
+      _carregando = true;
+      _erroAoCarregar = false;
+    });
+
+    try {
+      final correcoes = await _repository.obterTodas();
+      if (!mounted) return;
+      setState(() {
+        _correcoes = correcoes;
+        _carregando = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _carregando = false;
+        _erroAoCarregar = true;
+      });
+    }
+  }
 
   List<String> _obterTurmasDisponiveis(List<Correcao> todas) {
     final turmas = todas.map((c) => c.nomeTurma).toSet().toList()..sort();
@@ -120,7 +150,7 @@ class _ConsultaProvasCorrigidasViewState
       MaterialPageRoute(builder: (context) => const CameraCorrecao()),
     );
     if (!mounted) return;
-    setState(() {});
+    await _carregar();
   }
 
   Future<void> _confirmarExclusao(Correcao correcao) async {
@@ -150,8 +180,26 @@ class _ConsultaProvasCorrigidasViewState
 
     if (confirmar != true || !mounted) return;
 
+    try {
+      await _repository.remover(correcao.codigoVersao);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('Não foi possível remover a correção. '
+                'Verifique a conexão e tente de novo.'),
+          ),
+        );
+      return;
+    }
+
+    if (!mounted) return;
     setState(() {
-      _repository.remover(correcao.codigoVersao);
+      _correcoes = _correcoes
+          .where((item) => item.codigoVersao != correcao.codigoVersao)
+          .toList();
     });
 
     ScaffoldMessenger.of(context)
@@ -165,7 +213,7 @@ class _ConsultaProvasCorrigidasViewState
 
   @override
   Widget build(BuildContext context) {
-    final todas = _todasCorrecoes;
+    final todas = _correcoes;
     final turmas = _obterTurmasDisponiveis(todas);
     final turmaAtiva = turmas.contains(_turmaFiltro) ? _turmaFiltro : null;
 
@@ -359,13 +407,17 @@ class _ConsultaProvasCorrigidasViewState
                   },
                 ),
               ),
-              if (correcoesFiltradas.isNotEmpty)
+              if (!_carregando && correcoesFiltradas.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
                   child: _PainelResumoTurma(resumo: resumo),
                 ),
               Expanded(
-                child: correcoesFiltradas.isEmpty
+                child: _carregando
+                    ? const Center(child: CircularProgressIndicator())
+                    : _erroAoCarregar
+                    ? _ErroAoCarregar(onTentarNovamente: _carregar)
+                    : correcoesFiltradas.isEmpty
                     ? _EstadoVazio(
                         possuiFiltroAtivo: possuiFiltroAtivo,
                         onLimparFiltros: _limparFiltros,
@@ -783,6 +835,46 @@ class _EstadoVazio extends StatelessWidget {
                 label: const Text('Limpar filtros'),
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ErroAoCarregar extends StatelessWidget {
+  const _ErroAoCarregar({required this.onTentarNovamente});
+
+  final VoidCallback onTentarNovamente;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.cloud_off_outlined,
+              size: 48,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Não foi possível carregar as provas corrigidas.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 15,
+                color: Colors.grey.shade700,
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextButton.icon(
+              onPressed: onTentarNovamente,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Tentar novamente'),
+            ),
           ],
         ),
       ),

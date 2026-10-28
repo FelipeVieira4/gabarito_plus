@@ -9,25 +9,11 @@ class GabaritoQrCode extends StatelessWidget {
   final Prova prova;
   final VersaoProva versao;
 
-  String _gerarConteudoGabarito() {
-    final buffer = StringBuffer()
-      ..writeln('GABARITO - ${prova.titulo}')
-      ..writeln('Turma: ${prova.turma.nomeTurma}')
-      ..writeln('Aluno: ${versao.aluno.nome}')
-      ..writeln('Código da versão: ${versao.codigo}')
-      ..writeln();
-
-    for (var i = 0; i < versao.questoes.length; i++) {
-      final letra = String.fromCharCode(65 + versao.questoes[i].respostaCorreta);
-      buffer.writeln('Questão ${i + 1}: $letra');
-    }
-
-    return buffer.toString();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final qrData = _gerarConteudoGabarito();
+    // Só o código: as respostas ficam no Firestore, e quem ler o QR da
+    // folha do aluno não descobre o gabarito.
+    final qrData = versao.codigo;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Gabarito')),
