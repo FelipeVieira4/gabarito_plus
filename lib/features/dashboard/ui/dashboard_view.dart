@@ -6,13 +6,17 @@ import 'package:gabarito_plus/features/dashboard/ui/dashboard_alunos.dart';
 import 'package:gabarito_plus/features/geracao_prova/ui/configuracao_prova.dart';
 import 'package:gabarito_plus/features/professor/ui/profile_view.dart';
 import 'package:gabarito_plus/features/questoes/ui/consulta_questoes.dart';
-import 'package:gabarito_plus/features/professor/data/mock_professor.dart';
+import 'package:gabarito_plus/features/auth/service/auth_service.dart';
 
 class DashboardView extends StatelessWidget {
-  const DashboardView({super.key});
+  const DashboardView({super.key, this.nomeUsuario});
+
+  /// Só para testes (eles não têm Firebase). No app vem do login.
+  final String? nomeUsuario;
 
   @override
   Widget build(BuildContext context) {
+    final nome = nomeUsuario ?? AuthService().usuarioAtual?.displayName;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Página Inicial'),
@@ -55,8 +59,10 @@ class DashboardView extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Olá, ${usuarioMock.nome}',
+                     Text(
+                      nome == null || nome.trim().isEmpty
+                          ? 'Olá, Professor'
+                          : 'Olá, $nome',
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,

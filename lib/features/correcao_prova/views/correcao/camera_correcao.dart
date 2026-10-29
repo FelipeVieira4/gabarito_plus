@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:gabarito_plus/features/correcao_prova/mocks/mock_leitura.dart';
 import 'package:gabarito_plus/features/correcao_prova/services/correcao_repository.dart';
 import 'package:gabarito_plus/features/correcao_prova/services/correcao_service.dart';
 import 'package:gabarito_plus/features/correcao_prova/views/correcao/consulta_provas_corrigidas.dart';
@@ -7,7 +6,10 @@ import 'package:gabarito_plus/features/geracao_prova/data/correcao.dart';
 import 'package:gabarito_plus/features/geracao_prova/data/gabarito_lido.dart';
 import 'package:gabarito_plus/features/geracao_prova/service/prova_repository.dart';
 
-const bool kModoSimulado = true;
+/// Enquanto a câmera real não está integrada, o código da prova é digitado
+/// e a folha começa em branco, com as marcações feitas na conferência.
+/// Quando o `mobile_scanner` for plugado, basta virar esta flag.
+const bool kCameraDisponivel = false;
 
 enum _Etapa { lendoQr, lendoFolha, conferindo, resultado }
 
@@ -30,11 +32,6 @@ class _CameraCorrecaoState extends State<CameraCorrecao> {
   bool _folhaEmBranco = false;
   bool _salvando = false;
 
-
-  void _lerQrSimulado() {
-    _aplicarGabarito(proximoGabaritoSimulado());
-  }
-
   Future<void> _digitarCodigoManualmente() async {
     final codigo = await showDialog<String>(
       context: context,
@@ -51,12 +48,6 @@ class _CameraCorrecaoState extends State<CameraCorrecao> {
       _avisar('Não foi possível buscar a prova. Verifique a conexão e tente '
           'de novo.');
       return;
-    }
-
-    // Enquanto a câmera é simulada, os códigos de exemplo (ES2025A-00X)
-    // continuam funcionando.
-    if (gabarito == null && kModoSimulado) {
-      gabarito = gabaritoMockPorCodigo(codigo);
     }
 
     if (!mounted) return;
@@ -87,31 +78,17 @@ class _CameraCorrecaoState extends State<CameraCorrecao> {
     });
   }
 
-
-  void _lerFolhaSimulada() {
+  /// Sem câmera, a folha começa em branco e as respostas são marcadas na
+  /// conferência.
+  void _iniciarMarcacaoManual() {
     final gabarito = _gabarito!;
-    final folhaMock = folhaMockPorCodigo(gabarito.codigoVersao);
-
-    // Prova real (não é exemplo do mock): sem câmera, a folha começa em
-    // branco e as respostas são marcadas na conferência.
-    final folha = folhaMock ??
-        FolhaLida(
-          codigoVersao: gabarito.codigoVersao,
-          respostasMarcadas: List.filled(gabarito.totalQuestoes, null),
-        );
-
-    _folhaEmBranco = folhaMock == null;
-    _corrigir(gabarito, folha);
-  }
-
-  void _lerFolhaTrocadaSimulada() {
-    final gabarito = _gabarito!;
-    final outra = folhasLidasMock.firstWhere(
-      (folha) => folha.codigoVersao != gabarito.codigoVersao,
+    final folha = FolhaLida(
+      codigoVersao: gabarito.codigoVersao,
+      respostasMarcadas: List.filled(gabarito.totalQuestoes, null),
     );
 
-    _folhaEmBranco = false;
-    _corrigir(gabarito, outra);
+    _folhaEmBranco = true;
+    _corrigir(gabarito, folha);
   }
 
   void _corrigir(GabaritoLido gabarito, FolhaLida folha) {
@@ -128,7 +105,6 @@ class _CameraCorrecaoState extends State<CameraCorrecao> {
     }
   }
 
-
   void _alterarResposta(int numeroQuestao, int? novoIndice) {
     setState(() {
       _correcao = _correcao!.comRespostaAlterada(numeroQuestao, novoIndice);
@@ -138,7 +114,6 @@ class _CameraCorrecaoState extends State<CameraCorrecao> {
   void _confirmarConferencia() {
     setState(() => _etapa = _Etapa.resultado);
   }
-
 
   Future<void> _salvarESeguir() async {
     final correcao = _correcao!;
@@ -165,7 +140,6 @@ class _CameraCorrecaoState extends State<CameraCorrecao> {
 
     _avisar('Prova de ${correcao.nomeAluno} salva · nota ${_nota(correcao)}');
   }
-
 
   void _voltarEtapa() {
     if (_etapa == _Etapa.lendoQr) {
@@ -268,7 +242,6 @@ class _CameraCorrecaoState extends State<CameraCorrecao> {
     }
   }
 
-
   Widget _buildLeituraQr() {
     return Column(
       children: [
@@ -281,13 +254,7 @@ class _CameraCorrecaoState extends State<CameraCorrecao> {
         ),
         _PainelAcoes(
           children: [
-            if (kModoSimulado)
-              FilledButton.icon(
-                onPressed: _lerQrSimulado,
-                icon: const Icon(Icons.play_arrow),
-                label: const Text('Simular leitura do QR'),
-              ),
-            TextButton.icon(
+            FilledButton.icon(
               onPressed: _digitarCodigoManualmente,
               icon: const Icon(Icons.keyboard),
               label: const Text('Digitar código da prova'),
@@ -297,7 +264,6 @@ class _CameraCorrecaoState extends State<CameraCorrecao> {
       ],
     );
   }
-
 
   Widget _buildLeituraFolha() {
     final gabarito = _gabarito!;
@@ -320,23 +286,16 @@ class _CameraCorrecaoState extends State<CameraCorrecao> {
         ),
         _PainelAcoes(
           children: [
-            if (kModoSimulado) ...[
-              FilledButton.icon(
-                onPressed: _lerFolhaSimulada,
-                icon: const Icon(Icons.play_arrow),
-                label: const Text('Simular leitura da folha'),
-              ),
-              TextButton(
-                onPressed: _lerFolhaTrocadaSimulada,
-                child: const Text('Simular folha trocada'),
-              ),
-            ],
+            FilledButton.icon(
+              onPressed: _iniciarMarcacaoManual,
+              icon: const Icon(Icons.edit_note),
+              label: const Text('Marcar respostas manualmente'),
+            ),
           ],
         ),
       ],
     );
   }
-
 
   Widget _buildConferencia() {
     final correcao = _correcao!;
@@ -378,7 +337,6 @@ class _CameraCorrecaoState extends State<CameraCorrecao> {
       ],
     );
   }
-
 
   Widget _buildResultado() {
     final correcao = _correcao!;
@@ -432,7 +390,6 @@ class _CameraCorrecaoState extends State<CameraCorrecao> {
   }
 }
 
-
 /// Espaço reservado para o preview da câmera.
 ///
 /// Hoje desenha só a moldura de enquadramento. O preview real do
@@ -478,7 +435,7 @@ class _AreaCamera extends StatelessWidget {
             textAlign: TextAlign.center,
             style: const TextStyle(color: Colors.white, fontSize: 15),
           ),
-          if (kModoSimulado) ...[
+          if (!kCameraDisponivel) ...[
             const SizedBox(height: 8),
             const Text(
               'Câmera ainda não conectada',
@@ -911,7 +868,6 @@ class _Bolha extends StatelessWidget {
   }
 }
 
-
 class _DialogoCodigoManual extends StatefulWidget {
   const _DialogoCodigoManual();
 
@@ -947,7 +903,7 @@ class _DialogoCodigoManualState extends State<_DialogoCodigoManual> {
             autofocus: true,
             textCapitalization: TextCapitalization.characters,
             decoration: const InputDecoration(
-              hintText: 'ES2025A-001',
+              hintText: 'K7Q2XM-01',
               border: OutlineInputBorder(),
             ),
             onSubmitted: (_) => _confirmar(),

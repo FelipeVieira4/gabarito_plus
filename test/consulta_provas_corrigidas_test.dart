@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gabarito_plus/features/correcao_prova/mocks/mock_correcao.dart';
-import 'package:gabarito_plus/features/correcao_prova/mocks/mock_leitura.dart';
 import 'package:gabarito_plus/features/correcao_prova/services/correcao_repository.dart';
 import 'package:gabarito_plus/features/correcao_prova/views/correcao/consulta_provas_corrigidas.dart';
 import 'package:gabarito_plus/features/dashboard/ui/dashboard_view.dart';
 import 'package:gabarito_plus/features/geracao_prova/data/correcao.dart';
 
 import 'helpers/correcao_repository_memoria.dart';
+import 'helpers/fixtures_correcao.dart';
 
 void main() {
   setUp(() {
-    reiniciarSimulacaoDeLeitura();
     CorrecaoRepository.instancia =
-        CorrecaoRepositoryMemoria(correcoesMock.take(6));
+        CorrecaoRepositoryMemoria(gerarCorrecoesDeTeste().take(6));
   });
 
   Future<void> abrirTela(
@@ -36,13 +34,13 @@ void main() {
 
     expect(find.text('Provas Corrigidas'), findsOneWidget);
 
-    // O CorrecaoRepository inicia com as 6 primeiras correções do mock:
-    // Notas: 8.0, 10.0, 5.0, 6.0, 3.0, 9.0 -> média 6.8, maior 10.0, menor 3.0, 4 aprovados
+    // 6 correções. Notas: 8.0, 10.0, 6.0, 5.0, 9.0, 7.0
+    // -> média 7.5, maior 10.0, menor 5.0, 5 aprovados
     expect(find.text('Corrigidas'), findsOneWidget);
     expect(find.text('6'), findsOneWidget);
-    expect(find.text('6,8'), findsOneWidget);
-    expect(find.text('10,0 / 3,0'), findsOneWidget);
-    expect(find.text('4/6 (67%)'), findsOneWidget);
+    expect(find.text('7,5'), findsOneWidget);
+    expect(find.text('10,0 / 5,0'), findsOneWidget);
+    expect(find.text('5/6 (83%)'), findsOneWidget);
 
     // Por padrão ordena por maior nota: Ana Maria (10,0) vem no topo
     expect(find.text('Ana Maria'), findsOneWidget);
@@ -61,11 +59,10 @@ void main() {
     expect(find.text('ES2025A-005'), findsOneWidget);
     expect(find.text('Ana Maria'), findsNothing);
 
-    // O painel de resumo reflete apenas a prova filtrada (nota 3,0)
-    expect(find.text('1/1 (100%)'), findsNothing);
-    expect(find.text('0/1 (0%)'), findsOneWidget);
+    // O resumo reflete só a prova filtrada (Ricardo tirou 9,0: aprovado)
+    expect(find.text('1/1 (100%)'), findsOneWidget);
+    expect(find.text('0/1 (0%)'), findsNothing);
 
-    // Limpar busca pelo botão clear
     await tester.tap(find.byTooltip('Limpar busca'));
     await tester.pumpAndSettle();
 
@@ -135,7 +132,9 @@ void main() {
 
   testWidgets('DashboardView possui atalho para Provas Corrigidas',
       (tester) async {
-    await tester.pumpWidget(const MaterialApp(home: DashboardView()));
+    await tester.pumpWidget(
+      const MaterialApp(home: DashboardView(nomeUsuario: 'Prof. Teste')),
+    );
     await tester.pumpAndSettle();
 
     final cardConsulta = find.text('Provas Corrigidas');
