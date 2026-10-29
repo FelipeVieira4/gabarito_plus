@@ -161,11 +161,11 @@ Dentro de cada funcionalidade (`feature`), os arquivos são subdivididos logicam
 
 📌 **N2**
 
-### Enrique Zoz
+### Enrique Zoz de Souza
 
 | Tarefa | Tempo (h) | Prazo | Status |
 |---|---|---|---|
-| Revisão e Estabilização dos Fluxos da N1 | 10 | 10/06/2026 | Concluído |
+| Revisão e Estabilização dos Fluxos da N1 | 10 | 06/10/2026 | Concluído |
 | Integração do Módulo de Autenticação com Firebase Auth | 12 | 10/10/2026 | Concluído |
 | Atualização da Documentação e README da N2 | 6 | 28/10/2026 | Concluído |
 
@@ -173,15 +173,15 @@ Dentro de cada funcionalidade (`feature`), os arquivos são subdivididos logicam
 
 | Tarefa | Tempo (h) | Prazo | Status |
 |---|---|---|---|
-| Configuração do Projeto Firebase e SDKs no Flutter | 8 | 10/08/2026 | Concluído |
+| Configuração do Projeto Firebase e SDKs no Flutter | 8 | 08/10/2026 | Concluído |
 | Migração de AlunoService e TurmaService para Firestore | 14 | 14/10/2026 | Concluído |
 | Testes de Correção e Validação do Fluxo sem Mocks | 12 | 27/10/2026 | Concluído |
 
-### NATAN FELIPE VALENTE
+### Natan Felipe Valente
 
 | Tarefa | Tempo (h) | Prazo | Status |
 |---|---|---|---|
-| Modelagem de Coleções no Cloud Firestore | 10 | 10/12/2026 | Concluído |
+| Modelagem de Coleções no Cloud Firestore | 10 | 12/10/2026 | Concluído |
 | Migração da Geração de Provas e Gabaritos para Firestore | 12 | 18/10/2026 | Concluído |
 | Persistência Real dos Resultados de Correções no Firebase | 12 | 20/10/2026 | Concluído |
 
