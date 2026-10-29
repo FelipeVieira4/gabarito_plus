@@ -1,152 +1,285 @@
 # Gabarito Plus 📝
 
-Aplicativo em **Flutter** para professores gerenciarem turmas, alunos, banco de questões e provas com correção automatizada por câmera — inspirado nas dores relatadas por professores que hoje usam soluções como GradePen e Prova Fácil.
+Aplicativo desenvolvido em **Flutter** para auxiliar professores no gerenciamento de turmas, alunos, disciplinas, banco de questões e provas, com correção assistida e armazenamento de dados no Firebase Firestore.
 
 ## 💡 Motivação
 
-Professores com carga horária alta enfrentam semanas com centenas de provas para corrigir manualmente, o que atrasa a devolutiva aos alunos. O **Gabarito Plus** propõe resolver isso permitindo:
+Professores com carga horária elevada enfrentam dificuldades para corrigir grandes quantidades de provas manualmente, o que pode atrasar a devolutiva aos alunos. O **Gabarito Plus** busca facilitar esse processo por meio de:
 
-- Cadastro de um banco de questões reutilizável, organizado por disciplina e assunto;
-- Geração de provas com **embaralhamento** independente da ordem das questões e das alternativas, dificultando cola sem exigir provas totalmente diferentes;
-- Geração de um **gabarito com QR Code** por versão da prova;
-- **Correção via câmera** (fluxo de leitura do QR Code + folha de respostas), com conferência manual antes de salvar o resultado.
+- Cadastro e organização de questões por disciplina e assunto;
+- Geração de provas com embaralhamento independente das questões e alternativas;
+- Geração de versões individuais das provas para os alunos;
+- Criação de gabaritos com QR Code para identificar cada versão;
+- Correção assistida, com consulta ao gabarito salvo e conferência manual das respostas;
+- Armazenamento dos dados no Firebase Firestore.
 
 ## ✨ Funcionalidades
 
 ### Autenticação
-- Login de professor (`login_view.dart`)
-- Cadastro de novo professor (`cadastro_professor_view.dart`)
-- Perfil do usuário com logout (`profile_view.dart`)
+
+- Login de professor;
+- Cadastro de novos professores;
+- Identificação do usuário autenticado;
+- Perfil do usuário e opção de logout.
 
 ### Dashboard
-- Painel inicial com atalhos para todos os módulos (`dashboard_view.dart`)
-- Submenu de Turmas & Alunos (`dashboard_alunos.dart`)
+
+- Painel inicial com acesso aos módulos do aplicativo;
+- Atalhos para gerenciamento de turmas, alunos, disciplinas, questões, provas e correções;
+- Exibição do nome do usuário autenticado.
 
 ### Alunos
-- Cadastro/edição de aluno, com status Ativo/Inativo (`cadastro_aluno.dart`)
-- Consulta de alunos com busca por nome e filtro de ativos (`consulta_aluno.dart`)
+
+- Cadastro e edição de alunos;
+- Controle de status ativo/inativo;
+- Consulta com busca por nome;
+- Filtro de alunos ativos.
 
 ### Turmas
-- Cadastro/edição de turma, com vínculo de múltiplos alunos e status ativa/inativa (`cadastro_turma.dart`)
-- Consulta de turmas com detalhamento expansível dos alunos vinculados (`consulta_turma.dart`)
 
-### Disciplinas & Assuntos
-- Consulta com busca por disciplina/assunto (`consulta_disciplinas.dart`)
-- Cadastro rápido de disciplina e de assunto via modal (bottom sheet)
+- Cadastro e edição de turmas;
+- Vinculação de múltiplos alunos;
+- Controle de status ativa/inativa;
+- Consulta de turmas com detalhamento dos alunos vinculados.
 
-### Banco de Questões
-- Cadastro/edição de questão com 4 alternativas e marcação da correta (`cadastro_questao.dart`)
-- Consulta com filtros por disciplina/assunto e busca textual (`consulta_questoes.dart`)
-- Tela de detalhes da questão, destacando a alternativa correta (`detalhes_questoes.dart`)
+### Disciplinas e assuntos
+
+- Consulta de disciplinas e assuntos;
+- Busca por nome;
+- Cadastro de disciplinas e assuntos.
+
+### Banco de questões
+
+- Cadastro e edição de questões;
+- Quatro alternativas por questão, com identificação da resposta correta;
+- Consulta com filtros por disciplina e assunto;
+- Busca textual;
+- Visualização dos detalhes da questão e da alternativa correta.
 
 ### Provas
-- Configuração da prova: turma, disciplina, assunto, seleção de questões e opções de embaralhamento (`configuracao_prova.dart`)
-- Visualização das versões embaralhadas geradas por aluno, com opção de regerar (`visualizacao_embaralhamento.dart`)
-- Geração do gabarito em QR Code por versão da prova (`gabarito_qrcode.dart`); o QR contém só o código da versão, para que as respostas não fiquem expostas na folha do aluno
-- Provas e versões salvas no Firestore pelo botão "Salvar provas" (`ProvaRepository`); depois de salvas, não é mais possível embaralhar de novo
-- Código da versão no formato `K7Q2XM-03`: o id da prova (6 caracteres, sem `0 O 1 I L`) mais a posição do aluno na turma
 
-### Correção
-- Fluxo guiado em etapas — leitura do QR Code → leitura da folha de respostas → conferência das marcações → resultado (`camera_correcao.dart`)
-- Modo simulado (`kModoSimulado`) para testar o fluxo sem câmera real
-- "Digitar código da prova" busca o gabarito das provas salvas no Firestore; numa prova real a folha começa em branco e as respostas são marcadas na conferência. Os códigos de exemplo `ES2025A-001` a `-008` continuam funcionando no modo simulado
-- Conferência editável das respostas lidas antes de salvar a correção
-- Contador de provas corrigidas na sessão
-- Correções salvas no Firestore (coleção `correcoes`); corrigir de novo a mesma versão substitui o resultado anterior
-- Consulta das provas corrigidas com filtros por turma e prova, busca, ordenação e remoção (`consulta_provas_corrigidas.dart`)
+- Configuração da prova por turma, disciplina e assunto;
+- Seleção das questões que farão parte da prova;
+- Opções de embaralhamento das questões e alternativas;
+- Geração e visualização de versões individuais para os alunos;
+- Geração de QR Code para identificar cada versão;
+- Salvamento das provas e versões no Firestore.
+
+O QR Code identifica a versão da prova por meio de seu código, sem expor diretamente as respostas corretas.
+
+Após o salvamento, as versões armazenadas são mantidas para preservar a correspondência entre a prova gerada e seu gabarito.
+
+O código de cada versão segue o formato `K7Q2XM-03`, composto pelo identificador da prova e pela posição do aluno na turma.
+
+### Correção de provas
+
+- Digitação do código da versão para localizar o gabarito salvo no Firestore;
+- Preenchimento manual das respostas do aluno;
+- Conferência e edição das respostas antes de salvar;
+- Cálculo de acertos, erros, questões em branco e nota;
+- Contador de provas corrigidas durante a sessão;
+- Salvamento das correções no Firestore;
+- Substituição do resultado anterior quando a mesma versão é corrigida novamente;
+- Consulta das provas corrigidas com filtros por turma e prova, busca, ordenação e remoção.
+
+**Limitação atual:** a leitura automática do QR Code e da folha de respostas pela câmera ainda não está integrada. O fluxo atual utiliza a digitação do código da prova e o preenchimento manual das respostas.
+
+### Testes
+
+O projeto possui testes automatizados para validar regras de negócio, fluxos de correção e funcionalidades da interface. Os dados de teste são mantidos em fixtures dentro da pasta `test/helpers/`, separados do código de produção.
+
+Também existe um teste de integração com o Firestore para verificar a gravação e a leitura de provas, versões e correções.
 
 ## 🧱 Estrutura do projeto
 
-```
+O código é organizado por funcionalidades, separando interface, dados, modelos e regras de negócio.
+
+```text
 lib/
-├── models/         # Entidades de domínio (Aluno, Turma, Disciplina, Assunto, Questao, Prova, VersaoProva, Correcao, GabaritoLido...)
-├── mocks/          # Dados simulados para desenvolvimento (alunos, turmas, disciplinas, leituras)
-├── services/       # Regras de negócio (AlunoService, TurmaService, DisciplinasService, QuestoesService, CorrecaoService, CorrecaoRepository)
-├── widgets/         # Componentes reutilizáveis (ex.: ResponsiveContainer)
-└── views/
-    ├── auth/         # Login, cadastro de professor, perfil
-    ├── dashboard/    # Telas iniciais e menus
-    ├── alunos/       # Cadastro e consulta de alunos
-    ├── turmas/       # Cadastro e consulta de turmas
-    ├── disciplinas/  # Consulta/cadastro de disciplinas e assuntos
-    ├── questoes/     # Banco de questões
-    ├── provas/       # Configuração, embaralhamento e gabarito
-    └── correcao/     # Correção por câmera
+└── features/
+    ├── aluno/
+    ├── turma/
+    ├── disciplina/
+    ├── professor/
+    ├── dashboard/
+    ├── geracao_prova/
+    └── correcao_prova/
+
+test/
+├── helpers/
+│   └── fixtures_correcao.dart
+├── camera_correcao_test.dart
+├── consulta_provas_corrigidas_test.dart
+└── correcao_service_test.dart
+
+integration_test/
+└── firestore_gravacao_test.dart
 ```
 
-> Observação: alunos, turmas, disciplinas, questões, provas e correções são salvos no Firestore. A leitura por câmera (QR e folha) ainda é simulada, e os exemplos do modo simulado vêm de **mocks** (`mock_leitura.dart`).
+Os diretórios de funcionalidades contêm os arquivos específicos de cada módulo, organizados conforme suas responsabilidades.
+
+Os dados utilizados pela aplicação são persistidos no Firestore. Os dados de apoio aos testes ficam separados em `test/helpers/`, evitando dependências de mocks de produção.
 
 ## 🔥 Estrutura do Firestore
 
-Todas as coleções ficam na raiz do banco; o id de cada registro é o id do documento (não vai dentro dos campos). Referências entre coleções são guardadas como `xxxId`.
+As coleções ficam na raiz do banco, e os identificadores dos registros são os IDs dos documentos. Os relacionamentos entre coleções são armazenados por meio de campos como `alunoId`, `turmaId` e `disciplinaId`.
 
+```text
+alunos/{alunoId}
+  nome, email, isAtivo, nomeBusca
+
+turmas/{turmaId}
+  nomeTurma, ativa, alunosIds[]
+
+disciplinas/{disciplinaId}
+  descricao, descricaoBusca
+
+assuntos/{assuntoId}
+  nome, disciplinaId
+
+questoes/{questaoId}
+  enunciado, alternativas[{texto, isCorreta}],
+  disciplinaId, assuntoId
+
+provas/{provaId}
+  titulo, turmaId, nomeTurma, assuntoId,
+  nomeAssunto, questoesIds[],
+  embaralharQuestoes, embaralharAlternativas,
+  criadaEm
+
+  versoes/{codigoVersao}
+    alunoId, nomeAluno,
+    questoes[{questaoId, enunciado,
+    alternativas[], respostaCorreta}]
+
+correcoes/{codigoVersao}
+  provaId, turmaId, alunoId, tituloProva,
+  nomeTurma, nomeAluno, respostasMarcadas[],
+  respostasCorretas[], quantidadeAlternativas,
+  acertos, erros, emBranco, nota, dataHora
 ```
-alunos/{alunoId}             nome, email, isAtivo, nomeBusca
-turmas/{turmaId}             nomeTurma, ativa, alunosIds[]
-disciplinas/{disciplinaId}   descricao, descricaoBusca
-assuntos/{assuntoId}         nome, disciplinaId
-questoes/{questaoId}         enunciado, alternativas[{texto, isCorreta}], disciplinaId, assuntoId
 
-provas/{provaId}             titulo, turmaId, nomeTurma, assuntoId, nomeAssunto, questoesIds[],
-                             embaralharQuestoes, embaralharAlternativas, criadaEm
-└── versoes/{codigoVersao}   alunoId, nomeAluno,
-                             questoes[{questaoId, enunciado, alternativas[], respostaCorreta}]
+### Decisões de implementação
 
-correcoes/{codigoVersao}     provaId, turmaId, alunoId, tituloProva, nomeTurma, nomeAluno,
-                             respostasMarcadas[], respostasCorretas[], quantidadeAlternativas,
-                             acertos, erros, emBranco, nota, dataHora
-```
+- **Cópia das questões nas versões:** cada versão armazena os dados das questões utilizadas. Assim, alterações posteriores no banco de questões não modificam o conteúdo já gerado para aquela prova.
+- **Subcoleção de versões:** as versões ficam na subcoleção `versoes` de cada prova, evitando concentrar todas elas em um único documento.
+- **Identificação da correção:** o código da versão é utilizado como identificador do documento de correção, facilitando a consulta do resultado daquela versão.
+- **Dados da correção:** nomes, nota, totais e respostas são armazenados no documento para facilitar a consulta dos resultados.
+- **Questões em branco:** são representadas por `null` no campo `respostasMarcadas`.
+- **Conversão dos dados:** os modelos implementam a conversão entre objetos Dart e dados do Firestore.
 
-- **Versões guardam uma cópia da questão**, e não só o id: se a questão for editada depois, a prova já impressa (e o gabarito do QR Code) continua igual.
-- **Uma versão por aluno** fica na subcoleção `versoes` da prova, em vez de um array no documento da prova, para não estourar o limite de 1 MB por documento em turmas grandes.
-- **A correção usa o código da versão (lido no QR Code) como id**, então dá para verificar se a prova já foi corrigida com uma única leitura.
-- **A correção copia nomes, nota e totais** para que a consulta de provas corrigidas monte a lista sem buscar em outras coleções. Questão em branco é gravada como `null` em `respostasMarcadas`.
-- A conversão de/para o Firestore fica nos próprios models (`toMap()`, `fromMap()`, `fromFirestore()`), no mesmo padrão de `Aluno` e `Questao`.
+## 🧪 Teste de gravação no Firestore
 
-### Teste de gravação no Firestore
+O arquivo `integration_test/firestore_gravacao_test.dart` verifica a gravação e a leitura de uma prova, uma versão e uma correção no banco real, removendo os registros de teste ao final.
 
-`integration_test/firestore_gravacao_test.dart` grava uma prova, uma versão e uma correção no banco real, lê de volta e apaga tudo no fim (ids começando com `TESTE-`). Ele precisa de um **usuário do app** (criado pela tela de Cadastro de Professor ou em Authentication no Console), não da conta Google usada no Console. Use uma conta só para testes.
+Para executá-lo, é necessário ter um usuário do aplicativo criado pela tela de Cadastro de Professor ou pelo Firebase Authentication. A conta utilizada para acessar o Console do Firebase não substitui automaticamente uma conta autenticada no aplicativo.
 
-No PowerShell, coloque cada argumento entre aspas simples para que caracteres como `$` na senha não sejam alterados:
+Recomenda-se utilizar uma conta exclusiva para testes.
+
+No PowerShell do Windows, execute:
 
 ```powershell
 flutter test integration_test/firestore_gravacao_test.dart -d windows '--dart-define=TEST_EMAIL=<email>' '--dart-define=TEST_PASSWORD=<senha>'
 ```
 
-Ou crie um arquivo `.env.test.json` (já ignorado pelo git) com `{"TEST_EMAIL": "...", "TEST_PASSWORD": "..."}` e rode com `--dart-define-from-file=.env.test.json`. Sem credenciais, os testes são pulados. No Windows, o build com Firebase exige Visual Studio 2022 17.14 ou mais novo.
+Substitua `<email>` e `<senha>` pelas credenciais da conta de teste.
+
+Como alternativa, crie um arquivo `.env.test.json`, ignorado pelo Git, com o seguinte conteúdo:
+
+```json
+{
+  "TEST_EMAIL": "seu-email",
+  "TEST_PASSWORD": "sua-senha"
+}
+```
+
+Depois, execute:
+
+```powershell
+flutter test integration_test/firestore_gravacao_test.dart -d windows --dart-define-from-file=.env.test.json
+```
+
+Sem as credenciais necessárias, os testes de integração são ignorados.
+
+**Observação:** no Windows, a compilação do aplicativo com Firebase pode exigir o Visual Studio 2022, versão 17.14 ou superior.
 
 ## 🎨 Design
 
-Interface pensada para ser **responsiva** (mobile e desktop, com `LayoutBuilder` e breakpoints) e **minimalista**, priorizando poucos elementos por tela e fluxo lógico — conforme preferência relatada pelo cliente entrevistado.
+A interface prioriza uma experiência simples, organizada e responsiva, com adaptação para diferentes tamanhos de tela por meio de recursos como `LayoutBuilder` e breakpoints.
+
+O objetivo é facilitar a navegação entre os módulos e reduzir a complexidade das tarefas realizadas pelo professor.
 
 ## 🚀 Como executar
 
-Pré-requisitos: [Flutter SDK](https://docs.flutter.dev/get-started/install) instalado.
+### Pré-requisitos
+
+- [Flutter SDK](https://docs.flutter.dev/get-started/install);
+- Dart SDK, disponibilizado com o Flutter;
+- Configuração do Firebase para o projeto;
+- Dependências do projeto instaladas.
+
+### Instalação
+
+Clone o repositório e acesse a pasta do projeto:
+
+```bash
+git clone <URL_DO_REPOSITORIO>
+cd gabarito_plus
+```
+
+Instale as dependências:
 
 ```bash
 flutter pub get
+```
+
+Execute o aplicativo:
+
+```bash
 flutter run
 ```
 
-Dependências externas identificadas no código:
-- `qr_flutter` — geração dos QR Codes do gabarito
+Para verificar problemas de análise estática:
 
-## 🗺️ Roadmap (com base nos requisitos levantados)
+```bash
+flutter analyze
+```
 
-**Essencial**
-- [x] Geração e correção de provas de forma automatizada
-- [ ] Leitura real de câmera (OCR/visão computacional) — hoje simulada via `kModoSimulado`
+Para executar os testes automatizados:
 
-**Importante**
-- [ ] Estatística de respostas por questão (qual alternativa foi mais marcada), para apoiar análise pedagógica
+```bash
+flutter test
+```
 
-**Desejável / futuro**
-- [ ] Importação de lista de alunos (ex.: planilha)
-- [ ] Identificação individual do aluno na folha de resposta, mesmo com prova padronizada
-- [ ] Exportação de relatório de notas em Excel
-- [ ] Edição de layout da prova gerada (evitar questões cortadas entre páginas), exportando em `.doc`
-- [ ] Persistência real (banco de dados) substituindo os mocks atuais
+A configuração do Firebase deve estar disponível no ambiente antes de executar as funcionalidades que dependem de autenticação e persistência.
 
-## 📌 Status
+## 🗺️ Roadmap
 
-Protótipo funcional em Flutter com fluxo completo de UI e regras de negócio simuladas (mocks), cobrindo o ciclo: cadastro de conteúdo → montagem da prova → geração de gabarito → correção assistida por câmera.
+### Essencial
+
+- [x] Cadastro e gerenciamento de alunos, turmas e disciplinas;
+- [x] Cadastro e consulta do banco de questões;
+- [x] Geração de provas e versões individuais;
+- [x] Geração de gabaritos com QR Code;
+- [x] Persistência de provas, versões e correções no Firestore;
+- [x] Correção assistida com digitação do código e marcação manual das respostas;
+- [ ] Integração da câmera para leitura automática do QR Code e da folha de respostas.
+
+### Importante
+
+- [ ] Estatísticas de respostas por questão, identificando as alternativas mais selecionadas;
+- [ ] Aprimoramento dos relatórios de desempenho dos alunos.
+
+### Desejável / futuro
+
+- [ ] Importação de listas de alunos por planilha;
+- [ ] Identificação individual do aluno na folha de respostas;
+- [ ] Exportação de relatórios de notas para Excel;
+- [ ] Personalização do layout das provas geradas;
+- [ ] Melhorias na distribuição das questões entre páginas durante a geração dos documentos.
+
+## 📌 Status do projeto
+
+Protótipo funcional desenvolvido em Flutter, com autenticação, gerenciamento de conteúdo, geração de provas, versões individuais e persistência de dados no Firebase Firestore.
+
+O fluxo de correção permite consultar o gabarito de uma versão salva, preencher manualmente as respostas e registrar o resultado. A leitura automática por câmera ainda está pendente de integração.
