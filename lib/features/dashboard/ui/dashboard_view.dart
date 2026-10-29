@@ -6,13 +6,17 @@ import 'package:gabarito_plus/features/dashboard/ui/dashboard_alunos.dart';
 import 'package:gabarito_plus/features/geracao_prova/ui/configuracao_prova.dart';
 import 'package:gabarito_plus/features/professor/ui/profile_view.dart';
 import 'package:gabarito_plus/features/questoes/ui/consulta_questoes.dart';
-import 'package:gabarito_plus/features/professor/data/mock_professor.dart';
+import 'package:gabarito_plus/features/auth/service/auth_service.dart';
 
 class DashboardView extends StatelessWidget {
-  const DashboardView({super.key});
+  const DashboardView({super.key, this.nomeUsuario});
+
+  /// Só para testes (eles não têm Firebase). No app vem do login.
+  final String? nomeUsuario;
 
   @override
   Widget build(BuildContext context) {
+    final nome = nomeUsuario ?? AuthService().usuarioAtual?.displayName;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Página Inicial'),
@@ -56,7 +60,9 @@ class DashboardView extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Olá, ${usuarioMock.nome}',
+                      nome == null || nome.trim().isEmpty
+                          ? 'Olá, Professor'
+                          : 'Olá, $nome',
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -79,7 +85,8 @@ class DashboardView extends StatelessWidget {
                           () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => const DashboardAluno()),
+                              builder: (context) => const DashboardAluno(),
+                            ),
                           ),
                         ),
                         _buildMenuCard(
@@ -90,8 +97,8 @@ class DashboardView extends StatelessWidget {
                           () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) =>
-                                    const ListaQuestoesView()),
+                              builder: (context) => const ListaQuestoesView(),
+                            ),
                           ),
                         ),
                         _buildMenuCard(
@@ -102,8 +109,9 @@ class DashboardView extends StatelessWidget {
                           () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) =>
-                                    const ConsultaDisciplinasView()),
+                              builder: (context) =>
+                                  const ConsultaDisciplinasView(),
+                            ),
                           ),
                         ),
                         _buildMenuCard(
@@ -114,8 +122,8 @@ class DashboardView extends StatelessWidget {
                           () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) =>
-                                    const ConfiguracaoProva()),
+                              builder: (context) => const ConfiguracaoProva(),
+                            ),
                           ),
                         ),
                         _buildMenuCard(
@@ -126,7 +134,8 @@ class DashboardView extends StatelessWidget {
                           () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => const CameraCorrecao()),
+                              builder: (context) => const CameraCorrecao(),
+                            ),
                           ),
                         ),
                         _buildMenuCard(
@@ -137,8 +146,9 @@ class DashboardView extends StatelessWidget {
                           () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) =>
-                                    const ConsultaProvasCorrigidasView()),
+                              builder: (context) =>
+                                  const ConsultaProvasCorrigidasView(),
+                            ),
                           ),
                         ),
                       ],
@@ -153,8 +163,13 @@ class DashboardView extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuCard(BuildContext context, String title, IconData icon,
-      Color color, VoidCallback onTap) {
+  Widget _buildMenuCard(
+    BuildContext context,
+    String title,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

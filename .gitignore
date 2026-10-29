@@ -51,3 +51,4 @@ app.*.map.json
 .fvm/
 # Credenciais do teste de integração (--dart-define-from-file)
 .env.test.json
+/flutter/
