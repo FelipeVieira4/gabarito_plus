@@ -74,21 +74,21 @@ O **Gabarito Plus** é uma plataforma educacional projetada para mitigar o tempo
 
 📌 **N1 / N2**
 
-<!-- 
-💡 Membros da equipe: Salvem os prints das telas atualizadas na pasta docs/telas/ e descomentem/editem as linhas abaixo:
-
-![Tela de Login](docs/telas/login.png)
 *Tela inicial de autenticação do professor.*
 
-![Dashboard](docs/telas/dashboard.png)
+![Tela de Login](docs/telas/login.png)
+
 *Painel principal com os módulos do sistema.*
 
-![Banco de Questões](docs/telas/banco_questoes.png)
+![Dashboard](docs/telas/dashboard.png)
+
 *Listagem de questões cadastradas filtradas por assunto.*
 
-![Câmera de Correção](docs/telas/camera_correcao.png)
+![Banco de Questões](docs/telas/banco_questoes.png)
+
 *Interface de escaneamento de gabarito via câmera.*
--->
+
+![Câmera de Correção](docs/telas/camera_correcao.png)
 
 ## 4. Modelo de Dados
 
