@@ -59,7 +59,7 @@ class DashboardView extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                     Text(
+                    Text(
                       nome == null || nome.trim().isEmpty
                           ? 'Olá, Professor'
                           : 'Olá, $nome',
@@ -85,7 +85,8 @@ class DashboardView extends StatelessWidget {
                           () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => const DashboardAluno()),
+                              builder: (context) => const DashboardAluno(),
+                            ),
                           ),
                         ),
                         _buildMenuCard(
@@ -96,8 +97,8 @@ class DashboardView extends StatelessWidget {
                           () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) =>
-                                    const ListaQuestoesView()),
+                              builder: (context) => const ListaQuestoesView(),
+                            ),
                           ),
                         ),
                         _buildMenuCard(
@@ -108,8 +109,9 @@ class DashboardView extends StatelessWidget {
                           () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) =>
-                                    const ConsultaDisciplinasView()),
+                              builder: (context) =>
+                                  const ConsultaDisciplinasView(),
+                            ),
                           ),
                         ),
                         _buildMenuCard(
@@ -120,8 +122,8 @@ class DashboardView extends StatelessWidget {
                           () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) =>
-                                    const ConfiguracaoProva()),
+                              builder: (context) => const ConfiguracaoProva(),
+                            ),
                           ),
                         ),
                         _buildMenuCard(
@@ -132,7 +134,8 @@ class DashboardView extends StatelessWidget {
                           () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => const CameraCorrecao()),
+                              builder: (context) => const CameraCorrecao(),
+                            ),
                           ),
                         ),
                         _buildMenuCard(
@@ -143,8 +146,9 @@ class DashboardView extends StatelessWidget {
                           () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) =>
-                                    const ConsultaProvasCorrigidasView()),
+                              builder: (context) =>
+                                  const ConsultaProvasCorrigidasView(),
+                            ),
                           ),
                         ),
                       ],
@@ -159,8 +163,13 @@ class DashboardView extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuCard(BuildContext context, String title, IconData icon,
-      Color color, VoidCallback onTap) {
+  Widget _buildMenuCard(
+    BuildContext context,
+    String title,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

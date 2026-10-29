@@ -45,8 +45,10 @@ class _CameraCorrecaoState extends State<CameraCorrecao> {
       gabarito = await ProvaRepository.instancia.buscarGabarito(codigo);
     } catch (_) {
       if (!mounted) return;
-      _avisar('Não foi possível buscar a prova. Verifique a conexão e tente '
-          'de novo.');
+      _avisar(
+        'Não foi possível buscar a prova. Verifique a conexão e tente '
+        'de novo.',
+      );
       return;
     }
 
@@ -124,8 +126,10 @@ class _CameraCorrecaoState extends State<CameraCorrecao> {
     } catch (_) {
       if (!mounted) return;
       setState(() => _salvando = false);
-      _avisar('Não foi possível salvar a correção. Verifique a conexão e '
-          'tente de novo.');
+      _avisar(
+        'Não foi possível salvar a correção. Verifique a conexão e '
+        'tente de novo.',
+      );
       return;
     }
 
@@ -273,13 +277,15 @@ class _CameraCorrecaoState extends State<CameraCorrecao> {
         _FaixaIdentificacao(gabarito: gabarito),
         if (_jaCorrigida)
           const _Aviso(
-            texto: 'Esta prova já foi corrigida antes. Salvar de novo '
+            texto:
+                'Esta prova já foi corrigida antes. Salvar de novo '
                 'substitui o resultado anterior.',
           ),
         Expanded(
           child: _AreaCamera(
             icone: Icons.document_scanner,
-            instrucao: 'Enquadre a folha de respostas de '
+            instrucao:
+                'Enquadre a folha de respostas de '
                 '${gabarito.nomeAluno.split(' ').first}',
             proporcaoMoldura: 3 / 4,
           ),
@@ -305,9 +311,9 @@ class _CameraCorrecaoState extends State<CameraCorrecao> {
         _Aviso(
           texto: _folhaEmBranco
               ? 'Folha em branco: marque as respostas do aluno. Toque na '
-                  'marcada para deixar em branco.'
+                    'marcada para deixar em branco.'
               : 'Confira o que foi lido da folha. Toque em uma alternativa '
-                  'para corrigir; toque na marcada para deixar em branco.',
+                    'para corrigir; toque na marcada para deixar em branco.',
           icone: Icons.edit_note,
         ),
         Expanded(
@@ -349,10 +355,7 @@ class _CameraCorrecaoState extends State<CameraCorrecao> {
             children: [
               _CartaoNota(correcao: correcao, notaFormatada: _nota(correcao)),
               const SizedBox(height: 20),
-              Text(
-                'Respostas',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+              Text('Respostas', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
               _GradeRespostas(
                 correcao: correcao,
@@ -778,8 +781,11 @@ class _LinhaResposta extends StatelessWidget {
       return Icon(Icons.check_circle, color: Colors.green.shade700, size: 20);
     }
     if (resposta.emBranco) {
-      return Icon(Icons.remove_circle_outline,
-          color: Colors.grey.shade500, size: 20);
+      return Icon(
+        Icons.remove_circle_outline,
+        color: Colors.grey.shade500,
+        size: 20,
+      );
     }
     return Icon(Icons.cancel, color: Colors.red.shade700, size: 20);
   }
