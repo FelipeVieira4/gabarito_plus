@@ -4,6 +4,7 @@ import 'package:gabarito_plus/features/correcao_prova/services/correcao_service.
 import 'package:gabarito_plus/features/correcao_prova/views/correcao/camera_correcao.dart';
 import 'package:gabarito_plus/features/geracao_prova/data/correcao.dart';
 import 'package:gabarito_plus/features/geracao_prova/data/estatistica_prova.dart';
+import 'package:gabarito_plus/features/correcao_prova/views/correcao/detalhes_prova_corrigida_view.dart';
 
 enum OrdenacaoCorrecao {
   maiorNota('Maior nota'),
@@ -151,6 +152,18 @@ class _ConsultaProvasCorrigidasViewState
     );
     if (!mounted) return;
     await _carregar();
+  }
+
+    void _abrirDetalhes(Correcao correcao) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DetalhesProvaCorrigidaView(
+          correcao: correcao,
+          notaCorte: widget.notaCorte,
+        ),
+      ),
+    );
   }
 
   Future<void> _confirmarExclusao(Correcao correcao) async {
@@ -431,9 +444,9 @@ class _ConsultaProvasCorrigidasViewState
                           return _CardCorrecao(
                             correcao: correcao,
                             notaCorte: widget.notaCorte,
-                            onTap: widget.onSelecionarCorrecao != null
-                                ? () => widget.onSelecionarCorrecao!(correcao)
-                                : null,
+                          onTap: () => widget.onSelecionarCorrecao != null
+                             ? widget.onSelecionarCorrecao!(correcao)
+                             : _abrirDetalhes(correcao),
                             onRemover: () => _confirmarExclusao(correcao),
                           );
                         },
