@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gabarito_plus/features/aluno/data/aluno.dart';
+import 'package:gabarito_plus/features/aluno/data/importacao_alunos.dart';
 
 class AlunoService {
   final _col = FirebaseFirestore.instance.collection('alunos');
@@ -54,4 +55,36 @@ class AlunoService {
   }
 
   Future<void> excluir(String id) => _col.doc(id).delete();
+
+  Future<({int criados, List<AlunoImportado> jaExistentes})> importar(
+    List<AlunoImportado> alunos,
+  ) async {
+    final snap = await _col.get();
+    final emailsExistentes = snap.docs
+        .map((d) => (d.data()['email'] ?? '').toString().trim().toLowerCase())
+        .toSet();
+
+    final novos = <AlunoImportado>[];
+    final jaExistentes = <AlunoImportado>[];
+    for (final a in alunos) {
+      (emailsExistentes.contains(a.email) ? jaExistentes : novos).add(a);
+    }
+
+    const tamanhoLote = 400;
+    for (var i = 0; i < novos.length; i += tamanhoLote) {
+      final batch = FirebaseFirestore.instance.batch();
+      for (final a in novos.skip(i).take(tamanhoLote)) {
+        final aluno = Aluno(
+          id: '',
+          nome: a.nome,
+          email: a.email,
+          isAtivo: a.isAtivo,
+        );
+        batch.set(_col.doc(), aluno.toMap());
+      }
+      await batch.commit();
+    }
+
+    return (criados: novos.length, jaExistentes: jaExistentes);
+  }
 }

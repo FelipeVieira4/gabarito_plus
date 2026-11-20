@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gabarito_plus/features/aluno/data/aluno.dart';
 import 'package:gabarito_plus/features/aluno/service/aluno_service.dart';
 import 'package:gabarito_plus/features/aluno/ui/cadastro_aluno.dart';
+import 'package:gabarito_plus/features/aluno/ui/importacao_alunos_view.dart';
 
 class ConsultaAluno extends StatefulWidget {
   const ConsultaAluno({super.key});
@@ -25,7 +26,21 @@ class _ConsultaAlunoState extends State<ConsultaAluno> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Consulta de Alunos')),
+      appBar: AppBar(
+        title: const Text('Consulta de Alunos'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.upload_file),
+            tooltip: 'Importar planilha (CSV/XLSX)',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ImportacaoAlunosView(),
+              ),
+            ),
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Column(
@@ -158,10 +173,8 @@ class _ConsultaAlunoState extends State<ConsultaAluno> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => CadastroAluno(
-                  title: 'Editar Aluno',
-                  aluno: aluno,
-                ),
+                builder: (context) =>
+                    CadastroAluno(title: 'Editar Aluno', aluno: aluno),
               ),
             );
           },
